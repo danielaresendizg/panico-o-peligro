@@ -77,30 +77,30 @@ function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
 const eventosDef=[
-  // grupo 0: título
-  {t:'Pánico.',    delay: 500,  grupo:0, color:BLANCO},
-  {t:'Peligro.',   delay: 900,  grupo:0, color:BLANCO},
+  // grupo 0: título — empieza cuando el ruido ya está bajando (4s)
+  {t:'Pánico.',    delay: 4000, grupo:0, color:BLANCO},
+  {t:'Peligro.',   delay: 5200, grupo:0, color:BLANCO},
   // grupo 1: autora
-  {t:'María.',     delay:1600,  grupo:1, color:BLANCO},
-  {t:'Luisa.',     delay:1900,  grupo:1, color:BLANCO},
-  {t:'Puga.',      delay:2200,  grupo:1, color:BLANCO},
+  {t:'María.',     delay: 7000, grupo:1, color:BLANCO},
+  {t:'Luisa.',     delay: 7800, grupo:1, color:BLANCO},
+  {t:'Puga.',      delay: 8600, grupo:1, color:BLANCO},
   // grupo 2: lugar
-  {t:'Centro.',    delay:2800,  grupo:2, color:BLANCO},
-  {t:'Cultural.',  delay:3100,  grupo:2, color:BLANCO},
-  {t:'España.',    delay:3400,  grupo:2, color:BLANCO},
+  {t:'Centro.',    delay:10500, grupo:2, color:BLANCO},
+  {t:'Cultural.',  delay:11300, grupo:2, color:BLANCO},
+  {t:'España.',    delay:12100, grupo:2, color:BLANCO},
   // grupo 3: fecha
-  {t:'25.06.2026.',delay:4000,  grupo:3, color:BLANCO},
+  {t:'25.06.2026.',delay:14000, grupo:3, color:BLANCO},
   // grupo 4: artista 1
-  {t:'Daniela.',   delay:4700,  grupo:4, color:BLANCO, hoverable:true},
-  {t:'Reséndiz.',  delay:4950,  grupo:4, color:BLANCO, hoverable:true},
+  {t:'Daniela.',   delay:16000, grupo:4, color:BLANCO, hoverable:true},
+  {t:'Reséndiz.',  delay:17000, grupo:4, color:BLANCO, hoverable:true},
   // grupo 5: artista 2
-  {t:'Brenda.',    delay:5350,  grupo:5, color:BLANCO, hoverable:true},
-  {t:'Isabel.',    delay:5550,  grupo:5, color:BLANCO, hoverable:true},
-  {t:'Pérez.',     delay:5750,  grupo:5, color:BLANCO, hoverable:true},
+  {t:'Brenda.',    delay:18500, grupo:5, color:BLANCO, hoverable:true},
+  {t:'Isabel.',    delay:19500, grupo:5, color:BLANCO, hoverable:true},
+  {t:'Pérez.',     delay:20500, grupo:5, color:BLANCO, hoverable:true},
   // grupo 6: link cartografía
-  {t:'cartografía.',delay:6400, grupo:6, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
+  {t:'cartografía.',delay:23000,grupo:6, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
   // grupo 7: link redes
-  {t:'redes.',     delay:6800,  grupo:7, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
+  {t:'redes.',     delay:25000, grupo:7, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
 ];
 const NUM_GRUPOS=8;
 
@@ -267,10 +267,11 @@ function drawFrame(now){
       else if(cycle<0.6) op=1;
       else op=(1-cycle)/0.4;
 
-      // intro: ruido empieza muy visible y se apaga en los primeros 3s
-      const introT=Math.max(0, Math.min(1, elapsed/3000));
-      const introMul=1 - introT*0.84; // de 1.0 → 0.16
-      const finalOp=op*(0.16 + (1-introT)*0.84);
+      // intro: ruido empieza muy visible y se apaga en 8s — respiración lenta
+      const introT=Math.max(0, Math.min(1, elapsed/8000));
+      // curva suave: ease-in-out cúbico
+      const introEase=introT<0.5 ? 4*introT*introT*introT : 1-Math.pow(-2*introT+2,3)/2;
+      const finalOp=op*(0.16 + (1-introEase)*0.84);
 
       ctx.font=`italic ${tFS}px Georgia,serif`;
       ctx.fillStyle=`rgba(255,255,255,${finalOp})`;
@@ -282,7 +283,8 @@ function drawFrame(now){
       const e=tok.eref;
       const t=elapsed-e.delay;
       if(t<800) return; // esperar que termine el fade-in
-      const pulso=0.88 + 0.12*Math.sin(elapsed*0.0008 + tok.x*0.05);
+      // pulso muy lento — un ciclo cada ~12s, fase distinta por token
+      const pulso=0.82 + 0.18*Math.sin(elapsed*0.00052 + tok.x*0.03);
       // redibujar con opacidad pulsante encima
       const tFS2=tok.fs||FS;
       ctx.font=`italic ${tFS2}px Georgia,serif`;
