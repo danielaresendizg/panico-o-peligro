@@ -147,7 +147,7 @@ eventosDef.filter(e=>e.href).forEach(e=>{
   const word=e.t.trimEnd();
   const delays=[], typos=[];
   for(let i=0;i<word.length;i++){
-    if(tr()<0.07){
+    if(tr()<0.02){
       const ta=_linkCursor;
       const te=ta+300+tr()*400; // visible 300–700ms — humano que duda antes de borrar
       typos.push({i, char:randTypo(word[i]), showAt:ta, hideAt:te});
@@ -165,7 +165,7 @@ eventosDef.filter(e=>!e.href).forEach(e=>{
   const word=e.t.trimEnd();
   const delays=[], typos=[];
   for(let i=0;i<word.length;i++){
-    if(tr()<0.06){
+    if(tr()<0.02){
       const ta=_whiteCursor;
       const te=ta+250+tr()*350; // visible 250–600ms
       typos.push({i, char:randTypo(word[i]), showAt:ta, hideAt:te});
@@ -385,16 +385,15 @@ function drawFrame(now){
         }
       }
 
-      // dibujar letras correctas
+      // dibujar letras correctas — aparición instantánea, golpe de tecla
       for(let li=0;li<word.length;li++){
         if(elapsed>=delays[li]){
-          const appear=Math.min(1,(elapsed-delays[li])/80);
           if(e.href){
             const op=0.30+(1-0.30)*invT;
-            ctx.fillStyle=`rgba(255,238,0,${appear*op})`;
+            ctx.fillStyle=`rgba(255,238,0,${op})`;
           } else {
             const op=0.88-0.50*invT;
-            ctx.fillStyle=`rgba(255,255,255,${appear*op})`;
+            ctx.fillStyle=`rgba(255,255,255,${op})`;
           }
           ctx.fillText(word[li], xPos[li], tok.y);
         }
