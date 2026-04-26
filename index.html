@@ -76,10 +76,10 @@ function getCanvasW(){ return getBreakpoint().w; }
 function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
-const RUIDO_BRIGHT_MS=8000;  // ruido brillante durante 8s, luego se apaga
-const LETRAS_START=4000;     // letras empiezan a condensarse desde aquí
-const LETRAS_END=18000;      // última letra visible
-const LINKS_START=16000;     // links siempre al final
+const RUIDO_BRIGHT_MS=0;     // ruido empieza a apagarse desde el inicio
+const LETRAS_START=1000;     // letras empiezan a la par del ruido
+const LETRAS_END=16000;
+const LINKS_START=14000;
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -258,43 +258,43 @@ function drawFrame(now){
 
       // hover solo en links
       const isHover=e.href && _hoverTok===tok;
-      const fs=isHover ? tFS*1.5 : tFS;
+      // hover: mismo tamaño pero shadowBlur para dar grosor visual
       const fontStr=e.mono
-        ? `${fs}px Consolas,"Lucida Console",monospace`
-        : `italic ${fs}px Georgia,serif`;
+        ? `${tFS}px Consolas,"Lucida Console",monospace`
+        : `italic ${tFS}px Georgia,serif`;
       ctx.font=fontStr;
 
-      // bbox para clicks
       if(e.hoverable) window._clickables.push({
         x1:tok.x, y1:tok.y-tFS*1.5, x2:tok.x+tok.tw+20, y2:tok.y+6,
         href:e.href||null, eref:e
       });
 
-      // centrar hover
-      let drawX=tok.x;
-      if(isHover){
-        const twHover=ctx.measureText(word).width;
-        drawX=tok.x-(twHover-tok.tw)/2;
-      }
-
+      const drawX=tok.x;
       const allVisible=delays.every(d=>elapsed>=d);
 
-      // ── RESPIRACIÓN ORGÁNICA para links ──────────────────────────────
+      // ── RESPIRACIÓN ORGÁNICA — amplia para links ─────────────────────
       let breathScale=1, breathOp=1;
       if(e.href && allVisible){
         const ts=tokenSeed(Math.round(tok.x), Math.round(tok.y));
         const period=11000+(ts%3000);
         const phase=(ts%1000)/1000;
         const t=((elapsed/period+phase)%1);
+        // onda compuesta — no mecánica
         const wave=0.6*Math.sin(t*Math.PI*2)
                   +0.25*Math.sin(t*Math.PI*4+0.8)
                   +0.15*Math.sin(t*Math.PI*1.3+1.4);
         const norm=(wave+1)/2;
-        breathScale=1+norm*0.14;
-        breathOp=0.72+norm*0.28;
+        breathScale=1+norm*0.45;  // expansión 1.0 → 1.45
+        breathOp=0.55+norm*0.45;  // opacidad 0.55 → 1.0
       }
 
-      // ── DIBUJAR LETRAS — fade-in lento, sin jitter ───────────────────
+      // hover: shadowBlur para grosor sin cambiar tamaño
+      if(isHover){
+        ctx.shadowColor=e.color==='#ffee00'?'rgba(255,238,0,.9)':'rgba(255,255,255,.9)';
+        ctx.shadowBlur=6;
+      }
+
+      // ── DIBUJAR LETRAS — fade-in lento ───────────────────────────────
       const centerX=drawX+tok.tw/2;
       if(e.href && allVisible && breathScale!==1){
         ctx.save();
@@ -307,7 +307,6 @@ function drawFrame(now){
         const ch=word[li];
         const cw=ctx.measureText(ch).width;
         if(elapsed>=delays[li]){
-          // fade-in lento: 2s por letra — sensación de condensación gradual
           const lop=Math.min(1,(elapsed-delays[li])/2000);
           const pulso=e.href ? breathOp
             : (0.84+0.16*Math.sin(elapsed*0.00048+tok.x*0.02+li*0.35));
@@ -318,6 +317,7 @@ function drawFrame(now){
         cx+=cw;
       }
       if(e.href && allVisible && breathScale!==1) ctx.restore();
+      ctx.shadowBlur=0;
       ctx.font=`italic ${tFS}px Georgia,serif`;
 
     } else if(tok.isRuido){
