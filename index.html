@@ -81,7 +81,6 @@ function getCanvasH(){ return getBreakpoint().h; }
 const CALM_DURATION=20000;   // arco completo: 20s
 const LETRAS_START=400;      // letras normales empiezan cuando el caos ya subió
 const LETRAS_END=12000;      // última letra aparece en 12s
-const LINKS_START=0;
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -118,20 +117,13 @@ const eventosDef=[
 ];
 const NUM_GRUPOS=7;
 
-// Cada letra tiene su propio delay aleatorio dentro de la ventana
-// — letras normales empiezan cuando el ruido todavía está alto
-// — links aparecen al final cuando ya hay calma
-function makeLetterDelays(str, isLink){
-  // links: aparecen en los primeros 800ms, muy rápido
-  // letras normales: distribuidas en toda la parte densa
-  const start=isLink ? 0      : LETRAS_START;
-  const end  =isLink ? 1500   : LETRAS_END;
+function makeLetterDelays(str){
   const delays=[];
-  for(let i=0;i<str.length;i++) delays.push(start+lsr()*(end-start));
+  for(let i=0;i<str.length;i++) delays.push(LETRAS_START+lsr()*(LETRAS_END-LETRAS_START));
   return delays;
 }
 eventosDef.forEach(e=>{
-  e._letterDelays=makeLetterDelays(e.t.trimEnd(), !!e.href);
+  e._letterDelays=makeLetterDelays(e.t.trimEnd());
 });
 
 let _layout=null;
@@ -320,22 +312,19 @@ function drawFrame(now){
       if(e.href && delays.some(d=>elapsed>=d)){
         const ts=tokenSeed(Math.round(tok.x), Math.round(tok.y));
 
-        // amplitud de respiración: solo existe cuando hay calma (calmT > 0.3)
-        // entra muy suavemente — sin umbral duro
-        const breathAmp=Math.max(0, (calmT-0.3)/0.7); // 0 cuando caos, 1 en calma total
+        // amplitud crece con calmT^3 — sin umbral, sin corte, totalmente suave
+        const breathAmp=Math.pow(calmT, 3);
 
-        // periodo: rápido en caos (4s), lento en calma (13s) — también desde calmT
+        // periodo se alarga conforme llega la calma
         const period=(4000+(ts%2000))*(1 + calmT*2.5);
         const phase=(ts%1000)/1000;
         const t=((elapsed/period+phase)%1);
 
-        // onda orgánica — tres senos, misma que antes
         const wave=0.6*Math.sin(t*Math.PI*2)
                   +0.25*Math.sin(t*Math.PI*4+0.8)
                   +0.15*Math.sin(t*Math.PI*1.3+1.4);
         const norm=(wave+1)/2;
 
-        // escala y opacidad moduladas por breathAmp — emergen sin golpe
         breathScale=1+norm*0.45*breathAmp;
         breathOp=1-(1-norm)*0.3*breathAmp;
       }
