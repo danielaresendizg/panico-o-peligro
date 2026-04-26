@@ -79,9 +79,10 @@ function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
 const RUIDO_BRIGHT_MS=0;
-const LETRAS_START=0;
-const LETRAS_END=5000;       // parte densa: letras completas en 5s
-const LINKS_START=0;
+const LETRAS_START=200;      // letras normales un poco después
+const LETRAS_END=5000;
+const LINKS_START=0;         // links aparecen primero
+const BREATH_START=17000;    // respiración solo después de la transición
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -122,8 +123,10 @@ const NUM_GRUPOS=7;
 // — letras normales empiezan cuando el ruido todavía está alto
 // — links aparecen al final cuando ya hay calma
 function makeLetterDelays(str, isLink){
-  const start=isLink ? LINKS_START : LETRAS_START;
-  const end  =isLink ? LETRAS_END  : LETRAS_END-2000;
+  // links: aparecen en los primeros 800ms, muy rápido
+  // letras normales: distribuidas en toda la parte densa
+  const start=isLink ? 0    : LETRAS_START;
+  const end  =isLink ? 800  : LETRAS_END-1000;
   const delays=[];
   for(let i=0;i<str.length;i++) delays.push(start+lsr()*(end-start));
   return delays;
@@ -281,9 +284,10 @@ function drawFrame(now){
 
       // ── RESPIRACIÓN ORGÁNICA — empieza desde que hay alguna letra visible
       let breathScale=1, breathOp=1;
-      if(e.href && delays.some(d=>elapsed>=d)){
+      if(e.href && elapsed>=BREATH_START && delays.some(d=>elapsed>=d)){
         const ts=tokenSeed(Math.round(tok.x), Math.round(tok.y));
-        // periodo se alarga conforme se calma: denso=4s, calma=13s
+        // fade-in suave de la respiración en los primeros 3s
+        const breathFadeIn=Math.min(1,(elapsed-BREATH_START)/3000);
         const calmT=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/12000));
         const period=(4000+(ts%2000)) + calmT*(9000+(ts%2000));
         const phase=(ts%1000)/1000;
@@ -292,12 +296,9 @@ function drawFrame(now){
                   +0.25*Math.sin(t*Math.PI*4+0.8)
                   +0.15*Math.sin(t*Math.PI*1.3+1.4);
         const norm=(wave+1)/2;
-        breathScale=1+norm*0.45;
-        breathOp=0.55+norm*0.45;
-
-        // pulso extra de color al terminar el intro — señal sutil en mobile
-        const introT=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/2000));
-        if(introT>0) breathOp=Math.min(1, breathOp+introT*0.3);
+        // escala y opacidad entran gradualmente con breathFadeIn
+        breathScale=1+norm*0.45*breathFadeIn;
+        breathOp=1-norm*0.45*(1-breathFadeIn*0.9);
       }
 
       // hover: shadowBlur para grosor sin cambiar tamaño
