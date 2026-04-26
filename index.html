@@ -7,7 +7,13 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;background:#000008;overflow:hidden}
-canvas{position:fixed;inset:0;width:100%;height:100%}
+/* Canvas fijo 390×844 — centrado, negro alrededor en pantallas más grandes */
+canvas{
+  position:fixed;
+  width:390px;height:844px;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%);
+}
 #pc{z-index:1;pointer-events:none}
 #bg{z-index:0}
 </style>
@@ -43,13 +49,8 @@ function rnd(){ return ruido[Math.floor(seededRnd()*ruido.length)]; }
 let _ruidoPhases=[];
 
 // Font size adaptado: en mobile más pequeño para que quepan más tokens por fila
-function getFS(){
-  const w=window.innerWidth, h=window.innerHeight;
-  const small=Math.min(w,h); // usa la dimensión menor para detectar mobile real
-  if(small<500) return 11;   // móvil portrait
-  if(small<700) return 16;   // móvil landscape / tablet pequeño
-  return 32;                 // desktop
-}
+const CANVAS_W=390, CANVAS_H=844;
+function getFS(){ return 12; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
 const eventosDef=[
@@ -84,7 +85,7 @@ let _layout=null;
 let _W=0,_H=0;
 
 function buildLayout(){
-  const W=window.innerWidth, H=window.innerHeight;
+  const W=CANVAS_W, H=CANVAS_H;
   _W=W; _H=H;
   _seed=42;
   const FS=getFS();
@@ -175,9 +176,9 @@ const startTime=performance.now();
 function drawFrame(now){
   const elapsed=now-startTime;
 
-  if(!_layout || window.innerWidth!==_W || window.innerHeight!==_H){
-    bg.width=window.innerWidth;
-    bg.height=window.innerHeight;
+  if(!_layout){
+    bg.width=CANVAS_W;
+    bg.height=CANVAS_H;
     buildLayout();
   }
 
@@ -260,14 +261,14 @@ bg.addEventListener('touchend',e=>{
   if(hit&&hit.href){e.preventDefault();window.location.href=hit.href;}
 },{passive:false});
 
+bg.width=CANVAS_W; bg.height=CANVAS_H;
 buildLayout();
-bg.width=_W; bg.height=_H;
 requestAnimationFrame(drawFrame);
 
 // Partículas
 const pc=document.getElementById('pc');
 const px=pc.getContext('2d');
-pc.width=window.innerWidth; pc.height=window.innerHeight;
+pc.width=CANVAS_W; pc.height=CANVAS_H;
 const pts=Array.from({length:35},()=>({
   x:Math.random()*pc.width,y:Math.random()*pc.height,
   s:Math.random()*.5+.1,vx:(Math.random()-.5)*.15,vy:(Math.random()-.5)*.15,
