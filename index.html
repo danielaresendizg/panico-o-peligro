@@ -88,7 +88,7 @@ const CALM_DURATION=20000;   // arco completo: 20s
 // 18–20s  inversión: blancas bajan, amarillas suben brillantes
 const LINKS_WRITE_START=3000;
 const LINKS_CHAR_MS=110;     // ms entre cada letra de los links
-const WHITE_CHAR_MS=55;      // ms entre cada letra blanca
+const WHITE_CHAR_MS=130;     // ms entre cada letra blanca — ritmo de mecanógrafo real
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -130,10 +130,10 @@ let _tseed=7919;
 function tr(){ _tseed=(_tseed*1664525+1013904223)>>>0; return _tseed/4294967296; }
 function humanDelay(base){
   const r=tr();
-  if(r<0.10) return base*(2.8+tr()*3.5);
-  if(r<0.30) return base*0.20;
+  if(r<0.12) return base*(3.0+tr()*4.0); // pausa larga: duda, busca tecla
+  if(r<0.18) return base*0.45;            // ráfaga leve — menos extrema
   const g=(tr()+tr()+tr()-1.5)/1.5;
-  return Math.max(18, base*(1+g*0.65));
+  return Math.max(60, base*(1+g*0.55));   // variación normal, mínimo 60ms
 }
 const TYPO_CHARS='aeiourstlnmcpdghbfvkqxyz';
 function randTypo(real){
@@ -174,7 +174,7 @@ eventosDef.filter(e=>!e.href).forEach(e=>{
     delays.push(_whiteCursor);
     _whiteCursor+=humanDelay(WHITE_CHAR_MS);
   }
-  _whiteCursor+=100+tr()*180;
+  _whiteCursor+=250+tr()*400; // pausa entre palabras — mecanógrafo que piensa
   e._letterDelays=delays; e._typos=typos;
 });
 
