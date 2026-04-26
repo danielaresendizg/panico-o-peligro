@@ -78,11 +78,11 @@ function getCanvasW(){ return getBreakpoint().w; }
 function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
-const CALM_DURATION=8000;
-const LETRAS_START=200;
-const LETRAS_END=5000;
+const CALM_DURATION=20000;   // arco completo: 20s
+const LETRAS_START=400;      // letras normales empiezan cuando el caos ya subió
+const LETRAS_END=12000;      // última letra aparece en 12s
 const LINKS_START=0;
-const BREATH_START=5500;
+const BREATH_START=14000;    // respiración cuando ya hay calma real
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -125,8 +125,8 @@ const NUM_GRUPOS=7;
 function makeLetterDelays(str, isLink){
   // links: aparecen en los primeros 800ms, muy rápido
   // letras normales: distribuidas en toda la parte densa
-  const start=isLink ? 0    : LETRAS_START;
-  const end  =isLink ? 800  : LETRAS_END-1000;
+  const start=isLink ? 0      : LETRAS_START;
+  const end  =isLink ? 1500   : LETRAS_END;
   const delays=[];
   for(let i=0;i<str.length;i++) delays.push(start+lsr()*(end-start));
   return delays;
@@ -253,10 +253,37 @@ function drawFrame(now){
   ctx.shadowBlur=0;
   window._clickables=[];
 
-  // curva de desaceleración global — exponencial: cae rápido al inicio, se frena
-  // 0=máxima velocidad/caos, 1=calma total
+  // Curva orgánica de corazón → calma (yoga)
+  // 1. sube al pico de caos en ~2s
+  // 2. desciende con perturbaciones amortiguadas — rebotes residuales
+  // 3. se asienta en calma profunda cerca de 18s
   const rawT=Math.min(1, elapsed/CALM_DURATION);
-  const calmT=1-Math.pow(1-rawT, 2.5); // ease-out exponencial
+
+  // base: campana asimétrica — sube rápido, baja lento
+  // pico alrededor de t=0.12 (2.4s), luego desciende
+  const peak=0.12;
+  let base;
+  if(rawT<=peak){
+    base=rawT/peak; // sube lineal al pico
+  } else {
+    // baja con ease-out pronunciado
+    const t2=(rawT-peak)/(1-peak);
+    base=1-Math.pow(t2,0.6);
+  }
+
+  // perturbaciones amortiguadas — como el cuerpo que intenta calmarse
+  // se amortiguan con (1-rawT)^1.5 para desaparecer hacia el final
+  const amp=Math.pow(Math.max(0,1-rawT),1.8);
+  const perturb=amp*(
+    0.10*Math.sin(elapsed*0.0031)   // oscilación lenta ~2s
+   +0.06*Math.sin(elapsed*0.0071)   // media ~0.9s
+   +0.03*Math.sin(elapsed*0.0137)   // rápida ~0.46s — micro-temblores
+   +0.015*Math.sin(elapsed*0.0251)  // muy rápida — residuo nervioso
+  );
+
+  // calmT: 0=caos máximo, 1=calma total
+  // invertimos base para que 0=inicio-caótico y 1=calma
+  const calmT=Math.max(0, Math.min(1, (1-base) + perturb*0.5));
 
   _layout.forEach(tok=>{
     if(tok.y>_H+20) return;
