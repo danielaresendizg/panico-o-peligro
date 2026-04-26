@@ -76,10 +76,10 @@ function getCanvasW(){ return getBreakpoint().w; }
 function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
-const INTRO_MS=18000;   // duración total del arco caos→calma
-const CAOS_END=8000;    // hasta aquí hay caos/jitter
-const ESTAB_END=14000;  // hasta aquí se estabiliza
-const LINKS_START=14500;// los links empiezan a aparecer
+const RUIDO_BRIGHT_MS=8000;  // ruido brillante durante 8s, luego se apaga
+const LETRAS_START=4000;     // letras empiezan a condensarse desde aquí
+const LETRAS_END=18000;      // última letra visible
+const LINKS_START=16000;     // links siempre al final
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -115,11 +115,12 @@ const eventosDef=[
 ];
 const NUM_GRUPOS=6;
 
-// Letras normales: distribuidas en todo el arco caos→calma (1s–13s)
-// Links: siempre al final, cuando ya hay calma
+// Cada letra tiene su propio delay aleatorio dentro de la ventana
+// — letras normales empiezan cuando el ruido todavía está alto
+// — links aparecen al final cuando ya hay calma
 function makeLetterDelays(str, isLink){
-  const start=isLink ? LINKS_START : 800;
-  const end  =isLink ? INTRO_MS    : ESTAB_END;
+  const start=isLink ? LINKS_START : LETRAS_START;
+  const end  =isLink ? LETRAS_END  : LETRAS_END-2000;
   const delays=[];
   for(let i=0;i<str.length;i++) delays.push(start+lsr()*(end-start));
   return delays;
@@ -278,30 +279,22 @@ function drawFrame(now){
 
       const allVisible=delays.every(d=>elapsed>=d);
 
-      // ── RESPIRACIÓN ORGÁNICA para links ────────────────────────────────
+      // ── RESPIRACIÓN ORGÁNICA para links ──────────────────────────────
       let breathScale=1, breathOp=1;
       if(e.href && allVisible){
         const ts=tokenSeed(Math.round(tok.x), Math.round(tok.y));
-        // cada token tiene ciclo ligeramente distinto (11–14s) y fase propia
-        const period=11000 + (ts % 3000);
-        const phase=(ts % 1000)/1000;
-        const t=((elapsed/period + phase) % 1);
-        // forma de onda: no sinusoide pura — combinación de dos senos
-        // da sensación de respiración irregular, no mecánica
-        const wave= 0.6*Math.sin(t*Math.PI*2)
-                  + 0.25*Math.sin(t*Math.PI*4 + 0.8)
-                  + 0.15*Math.sin(t*Math.PI*1.3 + 1.4);
-        const norm=(wave+1)/2; // 0–1
-        breathScale=1 + norm*0.14;
-        breathOp=0.72 + norm*0.28;
+        const period=11000+(ts%3000);
+        const phase=(ts%1000)/1000;
+        const t=((elapsed/period+phase)%1);
+        const wave=0.6*Math.sin(t*Math.PI*2)
+                  +0.25*Math.sin(t*Math.PI*4+0.8)
+                  +0.15*Math.sin(t*Math.PI*1.3+1.4);
+        const norm=(wave+1)/2;
+        breathScale=1+norm*0.14;
+        breathOp=0.72+norm*0.28;
       }
 
-      // ── CAOS: jitter en letras durante los primeros CAOS_END ms ────────
-      // El jitter decrece progresivamente hasta ESTAB_END
-      const caosT=elapsed<CAOS_END ? 1 : elapsed<ESTAB_END
-        ? 1-(elapsed-CAOS_END)/(ESTAB_END-CAOS_END) : 0;
-
-      // ── DIBUJAR LETRAS ──────────────────────────────────────────────────
+      // ── DIBUJAR LETRAS — fade-in lento, sin jitter ───────────────────
       const centerX=drawX+tok.tw/2;
       if(e.href && allVisible && breathScale!==1){
         ctx.save();
@@ -314,26 +307,13 @@ function drawFrame(now){
         const ch=word[li];
         const cw=ctx.measureText(ch).width;
         if(elapsed>=delays[li]){
-          const lop=Math.min(1,(elapsed-delays[li])/500);
-
-          // jitter: las letras tiemblan ligeramente durante el caos
-          // cada letra tiene su propio micro-jitter
-          const jAmp=caosT*3.5;
-          const jx=jAmp*(Math.sin(elapsed*0.04+li*2.3+tok.x*0.1)-0.5);
-          const jy=jAmp*(Math.sin(elapsed*0.033+li*3.1+tok.y*0.1)-0.5);
-
-          // parpadeo durante caos: algunas letras fluctúan
-          const flicker=caosT>0
-            ? 0.5+0.5*Math.sin(elapsed*0.008*(1+li*0.3)+tok.x*0.05)
-            : 1;
-
+          // fade-in lento: 2s por letra — sensación de condensación gradual
+          const lop=Math.min(1,(elapsed-delays[li])/2000);
           const pulso=e.href ? breathOp
             : (0.84+0.16*Math.sin(elapsed*0.00048+tok.x*0.02+li*0.35));
-
-          const finalOp=lop * (caosT>0 ? flicker : 1) * pulso;
-          if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${finalOp})`;
-          else ctx.fillStyle=`rgba(255,255,255,${finalOp*0.92})`;
-          ctx.fillText(ch, cx+jx, tok.y+jy);
+          if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${lop*pulso})`;
+          else ctx.fillStyle=`rgba(255,255,255,${lop*pulso*0.92})`;
+          ctx.fillText(ch, cx, tok.y);
         }
         cx+=cw;
       }
@@ -342,25 +322,20 @@ function drawFrame(now){
 
     } else if(tok.isRuido){
       const ph=_ruidoPhases[tok.phaseIdx];
-      const cycle=(elapsed/ph.period + ph.phase) % 1;
+      const cycle=(elapsed/ph.period+ph.phase)%1;
       let op;
       if(cycle<0.4) op=cycle/0.4;
       else if(cycle<0.6) op=1;
       else op=(1-cycle)/0.4;
 
-      // ruido vibra levemente durante el caos, se calma progresivamente
-      const caosRuido=elapsed<CAOS_END ? 1
-        : elapsed<ESTAB_END ? 1-(elapsed-CAOS_END)/(ESTAB_END-CAOS_END) : 0;
-      const jx=caosRuido*1.5*Math.sin(elapsed*0.05+tok.x*0.2);
-      const jy=caosRuido*1.0*Math.sin(elapsed*0.04+tok.y*0.15);
-
-      const introT=Math.max(0, Math.min(1, elapsed/INTRO_MS));
-      const introEase=introT<0.5 ? 4*introT*introT*introT : 1-Math.pow(-2*introT+2,3)/2;
-      const finalOp=op*(0.10 + (1-introEase)*0.84);
+      // ruido: empieza brillante, se apaga después de RUIDO_BRIGHT_MS
+      const introT=Math.max(0,Math.min(1,(elapsed-RUIDO_BRIGHT_MS)/10000));
+      const introEase=introT<0.5?4*introT*introT*introT:1-Math.pow(-2*introT+2,3)/2;
+      const finalOp=op*(0.10+(1-introEase)*0.74);
 
       ctx.font=`italic ${tFS}px Georgia,serif`;
       ctx.fillStyle=`rgba(255,255,255,${finalOp})`;
-      ctx.fillText(tok.t, tok.x+jx, tok.y+jy);
+      ctx.fillText(tok.t,tok.x,tok.y);
     }
 
   });
