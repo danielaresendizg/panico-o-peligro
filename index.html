@@ -283,21 +283,28 @@ function drawFrame(now){
         drawX=tok.x-(twHover-tok.tw)/2;
       }
 
+      // levitación para links: oscilación vertical lenta + brillo pulsante
+      const allVisible=delays.every(d=>elapsed>=d);
+      const levY = (e.href && allVisible)
+        ? Math.sin(elapsed * 0.0012 + tok.x * 0.01) * 3
+        : 0;
+      const levBrillo = (e.href && allVisible)
+        ? 0.75 + 0.25*Math.sin(elapsed * 0.0012 + tok.x * 0.01)
+        : 1;
+
       // dibujar letra a letra según su delay individual
       let cx=drawX;
       for(let li=0;li<word.length;li++){
         const ch=word[li];
         const cw=ctx.measureText(ch).width;
         if(elapsed>=delays[li]){
-          // fade-in por letra: 400ms
           const lop=Math.min(1,(elapsed-delays[li])/400);
-          // pulso suave post-aparición (no en links)
           const pulso=(!e.href)
             ? (0.82 + 0.18*Math.sin(elapsed*0.00052 + tok.x*0.03 + li*0.4))
-            : 1;
+            : levBrillo;
           if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${lop*pulso})`;
           else ctx.fillStyle=`rgba(255,255,255,${lop*pulso*0.92})`;
-          ctx.fillText(ch, cx, tok.y);
+          ctx.fillText(ch, cx, tok.y + levY);
         }
         cx+=cw;
       }
@@ -314,7 +321,8 @@ function drawFrame(now){
       // intro: ruido se apaga al mismo ritmo que aparecen los datos
       const introT=Math.max(0, Math.min(1, elapsed/INTRO_MS));
       const introEase=introT<0.5 ? 4*introT*introT*introT : 1-Math.pow(-2*introT+2,3)/2;
-      const finalOp=op*(0.16 + (1-introEase)*0.84);
+      // opacidad base reducida a .10 (antes .16)
+      const finalOp=op*(0.10 + (1-introEase)*0.84);
 
       ctx.font=`italic ${tFS}px Georgia,serif`;
       ctx.fillStyle=`rgba(255,255,255,${finalOp})`;
