@@ -88,8 +88,7 @@ const CALM_DURATION=20000;   // arco completo: 20s
 // 18–20s  inversión: blancas bajan, amarillas suben brillantes
 const LINKS_WRITE_START=3000;
 const LINKS_CHAR_MS=110;     // ms entre cada letra de los links
-const WHITE_WRITE_START=10000;
-const WHITE_CHAR_MS=55;      // ms entre cada letra blanca (más rápido, son más)
+const WHITE_CHAR_MS=55;      // ms entre cada letra blanca
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -126,40 +125,57 @@ const eventosDef=[
 ];
 const NUM_GRUPOS=7;
 
-// escritura humana: ráfagas, pausas torpes, micro-vacilaciones
-// usa PRNG propio para ser determinista (mismo resultado cada recarga)
+// escritura humana: ráfagas, pausas torpes, typos que se borran
 let _tseed=7919;
 function tr(){ _tseed=(_tseed*1664525+1013904223)>>>0; return _tseed/4294967296; }
 function humanDelay(base){
   const r=tr();
-  // 10% probabilidad de pausa larga (duda, buscar tecla)
-  if(r<0.10) return base*(2.5+tr()*3.0);
-  // 20% ráfaga rápida
-  if(r<0.30) return base*0.25;
-  // resto: variación normal con ruido gaussiano aproximado
-  const g=(tr()+tr()+tr()-1.5)/1.5; // aprox normal centrado en 0
-  return Math.max(20, base*(1+g*0.6));
+  if(r<0.10) return base*(2.8+tr()*3.5);
+  if(r<0.30) return base*0.20;
+  const g=(tr()+tr()+tr()-1.5)/1.5;
+  return Math.max(18, base*(1+g*0.65));
+}
+const TYPO_CHARS='aeiourstlnmcpdghbfvkqxyz';
+function randTypo(real){
+  let c; do { c=TYPO_CHARS[Math.floor(tr()*TYPO_CHARS.length)]; } while(c===real.toLowerCase());
+  return c;
 }
 
+// links primero, blancas empiezan 800ms después de que terminen los links
 let _linkCursor=LINKS_WRITE_START;
-let _whiteCursor=WHITE_WRITE_START;
-eventosDef.forEach(e=>{
+eventosDef.filter(e=>e.href).forEach(e=>{
   const word=e.t.trimEnd();
-  const delays=[];
-  if(e.href){
-    for(let i=0;i<word.length;i++){
-      delays.push(_linkCursor);
-      _linkCursor+=humanDelay(LINKS_CHAR_MS);
+  const delays=[], typos=[];
+  for(let i=0;i<word.length;i++){
+    if(tr()<0.18){
+      const ta=_linkCursor;
+      const te=ta+80+tr()*130;
+      typos.push({i, char:randTypo(word[i]), showAt:ta, hideAt:te});
+      _linkCursor=te+30;
     }
-    _linkCursor+=400+tr()*600; // pausa humana entre cartografía y redes
-  } else {
-    for(let i=0;i<word.length;i++){
-      delays.push(_whiteCursor);
-      _whiteCursor+=humanDelay(WHITE_CHAR_MS);
-    }
-    _whiteCursor+=120+tr()*200; // pausa entre palabras
+    delays.push(_linkCursor);
+    _linkCursor+=humanDelay(LINKS_CHAR_MS);
   }
-  e._letterDelays=delays;
+  _linkCursor+=500+tr()*700;
+  e._letterDelays=delays; e._typos=typos;
+});
+
+let _whiteCursor=_linkCursor+800;
+eventosDef.filter(e=>!e.href).forEach(e=>{
+  const word=e.t.trimEnd();
+  const delays=[], typos=[];
+  for(let i=0;i<word.length;i++){
+    if(tr()<0.14){
+      const ta=_whiteCursor;
+      const te=ta+60+tr()*110;
+      typos.push({i, char:randTypo(word[i]), showAt:ta, hideAt:te});
+      _whiteCursor=te+25;
+    }
+    delays.push(_whiteCursor);
+    _whiteCursor+=humanDelay(WHITE_CHAR_MS);
+  }
+  _whiteCursor+=100+tr()*180;
+  e._letterDelays=delays; e._typos=typos;
 });
 
 let _layout=null;
@@ -346,30 +362,40 @@ function drawFrame(now){
         ctx.shadowBlur=6;
       }
 
-      // ── DIBUJAR LETRAS ───────────────────────────────────────────────
-      // inversión final: empieza en elapsed=18s, termina en 20s
+      // ── DIBUJAR LETRAS + TYPOS ──────────────────────────────────────
       const invT=Math.max(0,Math.min(1,(elapsed-18000)/2000));
+      const typos=e._typos||[];
 
-      let cx=drawX;
+      // construir mapa posición x por índice de letra
+      const xPos=[]; let cx=drawX;
       for(let li=0;li<word.length;li++){
-        const ch=word[li];
-        const cw=ctx.measureText(ch).width;
+        xPos.push(cx);
+        cx+=ctx.measureText(word[li]).width;
+      }
+
+      // dibujar typos activos (letra incorrecta que aún no se borró)
+      for(const ty of typos){
+        if(elapsed>=ty.showAt && elapsed<ty.hideAt){
+          const fade=elapsed<ty.showAt+30 ? (elapsed-ty.showAt)/30 : 1;
+          if(e.href) ctx.fillStyle=`rgba(255,238,0,${fade*0.30})`;
+          else       ctx.fillStyle=`rgba(255,255,255,${fade*0.88})`;
+          ctx.fillText(ty.char, xPos[ty.i], tok.y);
+        }
+      }
+
+      // dibujar letras correctas
+      for(let li=0;li<word.length;li++){
         if(elapsed>=delays[li]){
-          // fade-in rápido al aparecer (80ms)
           const appear=Math.min(1,(elapsed-delays[li])/80);
           if(e.href){
-            // AMARILLO: escribe opaco (0.30), inversión final lo sube a 1.0
-            const base=0.30;
-            const op=base+(1-base)*invT;
+            const op=0.30+(1-0.30)*invT;
             ctx.fillStyle=`rgba(255,238,0,${appear*op})`;
           } else {
-            // BLANCO: escribe brillante (0.88), inversión final lo baja a 0.38
             const op=0.88-0.50*invT;
             ctx.fillStyle=`rgba(255,255,255,${appear*op})`;
           }
-          ctx.fillText(ch, cx, tok.y);
+          ctx.fillText(word[li], xPos[li], tok.y);
         }
-        cx+=cw;
       }
       ctx.shadowBlur=0;
       ctx.font=`italic ${tFS}px Georgia,serif`;
