@@ -389,7 +389,19 @@ function drawFrame(now){
       for(let li=0;li<word.length;li++){
         if(elapsed>=delays[li]){
           if(e.href){
-            const op=0.30+(1-0.30)*invT;
+            // durante escritura: opaco fijo (0.30→1.0 con invT)
+            // al final (invT=1): pulsa con mismo ciclo del ruido pero en primer plano
+            const masterT=MASTER_PERIOD*(0.35+calmT*0.65);
+            const lphase=tok.x*0.0013+li*0.17;
+            const angle=((elapsed/masterT)+lphase)*Math.PI*2;
+            const raw=(Math.sin(angle)*0.5+0.5);
+            const raw2=(Math.sin(angle*1.618+1.2)*0.5+0.5);
+            const pulso=raw*0.75+raw2*0.25; // 0..1
+            // antes de la inversión: fijo en 0.30→1.0
+            // después: pulsa entre 0.55 y 1.0 (primer plano)
+            const lo=0.55, hi=1.0;
+            const pulsado=lo+(hi-lo)*pulso;
+            const op=(0.30+(1-0.30)*invT)*(1-invT) + pulsado*invT;
             ctx.fillStyle=`rgba(255,238,0,${op})`;
           } else {
             const op=0.88-0.50*invT;
