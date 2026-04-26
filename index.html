@@ -161,20 +161,23 @@ function buildLayout(){
 
   function flushGrupo(){
     const {items}=grupos[gi]; gi++;
-    const totalW=items.reduce((s,e)=>s+ctx.measureText(e.t+'  ').width,0);
-    // si el grupo no cabe en el carril desde x actual, avanzar en el flujo hasta que quepa
-    // primero verificar si estamos dentro del carril
+    function measureE(e){
+      const prev=ctx.font;
+      if(e.mono) ctx.font=`${FS}px Consolas,"Lucida Console",monospace`;
+      const w=ctx.measureText(e.t+'  ').width;
+      ctx.font=prev;
+      return w;
+    }
+    const totalW=items.reduce((s,e)=>s+measureE(e),0);
     const enCarril=(x>=MARGEN && x+totalW<=MARGEN+carriW);
     if(!enCarril){
-      // avanzar con ruido hasta que x quede dentro del carril
       let safety=0;
       while((x<MARGEN || x+totalW>MARGEN+carriW) && safety<tokPerRow*3){
         pushRuido(); safety++;
       }
     }
-    // insertar el grupo
     items.forEach(e=>{
-      const tw=ctx.measureText(e.t+'  ').width;
+      const tw=measureE(e);
       if(x+tw>W+20){ r++; x=rowX(r); }
       const y=r*lh+FS;
       layout.push({t:e.t+'  ', isEvento:true, eref:e, x, y, tw, fs:FS});
@@ -235,7 +238,7 @@ function drawFrame(now){
       const fs=isHover ? linkFS*1.4 : linkFS;
       const yOff=isHover ? tFS*0.8 : 0;
       if(e.mono){
-        ctx.font=`${fs}px "Courier New",Courier,monospace`;
+        ctx.font=`${fs}px Consolas,"Lucida Console",monospace`;
       } else {
         ctx.font=`italic ${fs}px Georgia,serif`;
       }
