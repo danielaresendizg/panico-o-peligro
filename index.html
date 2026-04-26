@@ -80,8 +80,8 @@ function getCanvasH(){ return getBreakpoint().h; }
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
 const RUIDO_BRIGHT_MS=0;
 const LETRAS_START=0;
-const LETRAS_END=8000;
-const LINKS_START=0;         // links visibles desde el inicio
+const LETRAS_END=5000;       // parte densa: letras completas en 5s
+const LINKS_START=0;
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -283,7 +283,9 @@ function drawFrame(now){
       let breathScale=1, breathOp=1;
       if(e.href && delays.some(d=>elapsed>=d)){
         const ts=tokenSeed(Math.round(tok.x), Math.round(tok.y));
-        const period=11000+(ts%3000);
+        // periodo se alarga conforme se calma: denso=4s, calma=13s
+        const calmT=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/12000));
+        const period=(4000+(ts%2000)) + calmT*(9000+(ts%2000));
         const phase=(ts%1000)/1000;
         const t=((elapsed/period+phase)%1);
         const wave=0.6*Math.sin(t*Math.PI*2)
@@ -317,7 +319,7 @@ function drawFrame(now){
         const ch=word[li];
         const cw=ctx.measureText(ch).width;
         if(elapsed>=delays[li]){
-          const lop=Math.min(1,(elapsed-delays[li])/800);
+          const lop=Math.min(1,(elapsed-delays[li])/400);
           const pulso=e.href ? breathOp
             : (0.84+0.16*Math.sin(elapsed*0.00048+tok.x*0.02+li*0.35));
           if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${lop*pulso})`;
@@ -332,14 +334,18 @@ function drawFrame(now){
 
     } else if(tok.isRuido){
       const ph=_ruidoPhases[tok.phaseIdx];
-      const cycle=(elapsed/ph.period+ph.phase)%1;
+      // periodo dinámico: rápido en parte densa (×0.4), lento al calmarse (×1)
+      const calmR=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/10000));
+      const dynPeriod=ph.period*(0.35+calmR*0.65);
+      const cycle=(elapsed/dynPeriod+ph.phase)%1;
       let op;
       if(cycle<0.4) op=cycle/0.4;
       else if(cycle<0.6) op=1;
       else op=(1-cycle)/0.4;
 
       // ruido: empieza brillante, se apaga después de RUIDO_BRIGHT_MS
-      const introT=Math.max(0,Math.min(1,(elapsed-RUIDO_BRIGHT_MS)/10000));
+      // ruido se apaga lento después de la parte densa — transición a calma
+      const introT=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/12000));
       const introEase=introT<0.5?4*introT*introT*introT:1-Math.pow(-2*introT+2,3)/2;
       const finalOp=op*(0.10+(1-introEase)*0.74);
 
