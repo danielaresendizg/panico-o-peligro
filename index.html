@@ -303,7 +303,6 @@ function drawFrame(now){
       });
 
       const drawX=tok.x;
-      const allVisible=delays.every(d=>elapsed>=d);
 
       // ── RESPIRACIÓN — nace directamente de calmT, sin momento fijo
       // cuando calmT es bajo (caos) no hay respiración
@@ -335,7 +334,7 @@ function drawFrame(now){
         ctx.shadowBlur=6;
       }
 
-      // ── DIBUJAR LETRAS — fade-in lento ───────────────────────────────
+      // ── DIBUJAR LETRAS — mismo ciclo seno que el ruido ──────────────
       const centerX=drawX+tok.tw/2;
       if(e.href && breathScale!==1){
         ctx.save();
@@ -348,13 +347,19 @@ function drawFrame(now){
         const ch=word[li];
         const cw=ctx.measureText(ch).width;
         if(elapsed>=delays[li]){
-          // fade-in más lento conforme se calma: 200ms→1500ms
-          const fadeMs=200+calmT*1300;
-          const lop=Math.min(1,(elapsed-delays[li])/fadeMs);
-          const pulso=e.href ? breathOp
-            : (0.84+0.16*Math.sin(elapsed*0.00048+tok.x*0.02+li*0.35));
-          if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${lop*pulso})`;
-          else ctx.fillStyle=`rgba(255,255,255,${lop*pulso*0.92})`;
+          // periodo idéntico al ruido: rápido en caos, lento en calma
+          const lphase=delays[li]/7000; // fase única por letra
+          const lperiod=4000*(0.35+calmT*0.65);
+          const lcycle=((elapsed/lperiod)+lphase)%1;
+          let lpulso;
+          if(lcycle<0.4) lpulso=lcycle/0.4;
+          else if(lcycle<0.6) lpulso=1;
+          else lpulso=(1-lcycle)/0.4;
+          // en calma: el pulso se aplana hacia 1 (letra siempre visible)
+          const pulso=lpulso*(1-calmT)+calmT;
+          const finalOp=e.href ? breathOp : (e.color==='#ffee00' ? pulso : pulso*0.92);
+          if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${finalOp})`;
+          else ctx.fillStyle=`rgba(255,255,255,${finalOp})`;
           ctx.fillText(ch, cx, tok.y);
         }
         cx+=cw;
