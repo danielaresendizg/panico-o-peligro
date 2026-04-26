@@ -115,62 +115,100 @@ function buildLayout(){
   const lh=Math.round(FS*1.52);
   ctx.font=`italic ${FS}px Georgia,serif`;
 
-  // ── PASO 1: construir grupos de evento con posición X garantizada ──────────
-  // Cada grupo = una fila. Calculamos qué fila ocupará cada grupo centrado verticalmente.
+  // Carril interior para datos: 20% de margen a cada lado
+  const MARGEN=Math.round(W*0.20);
+  const carriW=W-MARGEN*2; // ancho útil para datos
 
-  // Agrupar eventosDef por grupo id
+  function rowX(row){ return -(row*71)%Math.min(140,W*0.15); }
+
+  // ── PASO 1: grupos de evento en carril interior ───────────────────────────
+  // Agrupar por grupo id
   const gruposMap=new Map();
   eventosDef.forEach(e=>{
     if(!gruposMap.has(e.grupo)) gruposMap.set(e.grupo,[]);
     gruposMap.get(e.grupo).push(e);
   });
   const gruposArr=[...gruposMap.entries()].sort((a,b)=>a[0]-b[0]);
-  const nGrupos=gruposArr.length; // 7 grupos = 7 filas de datos
+  const nGrupos=gruposArr.length;
 
-  // Altura total del bloque de datos (7 filas + 1 fila extra entre links)
-  const bloqueH=nGrupos*lh;
-  // Fila donde empieza el bloque — centrado verticalmente
-  const rowStart=Math.round((H - bloqueH) / (2*lh));
+  // Simular el flujo de cada grupo dentro del carril para saber cuántas filas ocupa
+  // (un grupo largo puede necesitar 2 filas si no cabe en carriW)
+  const grupoFilas=[]; // para cada grupo: array de {items, fila}
+  let simRow=0, simX=MARGEN;
 
-  // Para cada grupo, calcular x de inicio según si está centrado o no
-  const eventoLayout=[]; // {e, x, y, tw, fs}
-  gruposArr.forEach(([gid, items], gi)=>{
-    const row=rowStart+gi;
-    const y=row*lh+FS;
+  gruposArr.forEach(([gid, items])=>{
+    // medir ancho total del grupo
     const totalW=items.reduce((s,e)=>s+ctx.measureText(e.t+'  ').width,0);
-    const isCenter=items[0].center;
-    // centrado siempre horizontalmente para todos los grupos
-    let x=Math.max(4, Math.round((W-totalW)/2));
+    // si no cabe en el carril desde simX, saltar a línea nueva
+    if(simX>MARGEN && simX+totalW>MARGEN+carriW){ simRow++; simX=MARGEN; }
+    grupoFilas.push({items, row:simRow, x:simX});
+    simX+=totalW;
+    // después de cada grupo saltar a nueva línea para mantenerlos separados
+    simRow++; simX=MARGEN;
+  });
+
+  // Centrar el bloque verticalmente
+  const bloqueRows=simRow; // total de filas que ocupa el bloque
+  const totalRows=Math.ceil(H/lh)+2;
+  const rowOffset=Math.max(1, Math.round((totalRows - bloqueRows)/2) - Math.round(nGrupos*0.5));
+
+  // Construir eventoLayout con posiciones definitivas
+  const eventoLayout=[];
+  const eventoRows=new Set();
+  grupoFilas.forEach(({items, row, x:gx})=>{
+    const absRow=rowOffset+row;
+    eventoRows.add(absRow);
+    const y=absRow*lh+FS;
+    // x: alinear al inicio del carril (gx ya tiene el MARGEN)
+    let x=gx;
     items.forEach(e=>{
       const tw=ctx.measureText(e.t+'  ').width;
-      eventoLayout.push({e, x, y, tw, fs:FS, row});
+      eventoLayout.push({e, x, y, tw, fs:FS, row:absRow});
       x+=tw;
     });
   });
 
-  // ── PASO 2: construir ruido que llena todo el canvas ──────────────────────
-  // El ruido ocupa todas las filas, pero las filas del bloque de datos se saltan
-  const eventoRows=new Set(eventoLayout.map(t=>t.row));
+  // ── PASO 2: ruido llena TODO el ancho en filas que no son de datos ─────────
   const layout=[];
   _ruidoPhases=[];
 
-  function rowX(row){ return -(row*71)%Math.min(140,W*0.2); }
-  const totalRows=Math.ceil(H/lh)+2;
-
   for(let row=0;row<totalRows;row++){
-    if(eventoRows.has(row)) continue; // esta fila la ocupa un grupo de datos
-    let x=rowX(row);
     const y=row*lh+FS;
-    while(x<W+20){
-      const t=rnd()+'.  ';
-      const tw=ctx.measureText(t).width;
-      layout.push({t, isRuido:true, x, y, tw, fs:FS, phaseIdx:_ruidoPhases.length});
-      _ruidoPhases.push({phase:seededRnd(), period:3000+seededRnd()*5000});
-      x+=tw;
+    if(eventoRows.has(row)){
+      // fila de datos: ruido solo en los márgenes izquierdo y derecho
+      // margen izquierdo
+      let x=rowX(row);
+      while(x<MARGEN-4){
+        const t=rnd()+'.  ';
+        const tw=ctx.measureText(t).width;
+        if(x+tw>MARGEN) break;
+        layout.push({t, isRuido:true, x, y, tw, fs:FS, phaseIdx:_ruidoPhases.length});
+        _ruidoPhases.push({phase:seededRnd(), period:3000+seededRnd()*5000});
+        x+=tw;
+      }
+      // margen derecho — empieza después del carril
+      x=MARGEN+carriW+4;
+      while(x<W+20){
+        const t=rnd()+'.  ';
+        const tw=ctx.measureText(t).width;
+        layout.push({t, isRuido:true, x, y, tw, fs:FS, phaseIdx:_ruidoPhases.length});
+        _ruidoPhases.push({phase:seededRnd(), period:3000+seededRnd()*5000});
+        x+=tw;
+      }
+    } else {
+      // fila libre: ruido de borde a borde
+      let x=rowX(row);
+      while(x<W+20){
+        const t=rnd()+'.  ';
+        const tw=ctx.measureText(t).width;
+        layout.push({t, isRuido:true, x, y, tw, fs:FS, phaseIdx:_ruidoPhases.length});
+        _ruidoPhases.push({phase:seededRnd(), period:3000+seededRnd()*5000});
+        x+=tw;
+      }
     }
   }
 
-  // ── PASO 3: añadir eventos al layout ──────────────────────────────────────
+  // ── PASO 3: añadir eventos ────────────────────────────────────────────────
   eventoLayout.forEach(({e,x,y,tw,fs})=>{
     layout.push({t:e.t+'  ', isEvento:true, eref:e, x, y, tw, fs});
   });
