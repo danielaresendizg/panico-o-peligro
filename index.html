@@ -66,9 +66,9 @@ const eventos=[
   {t:'Brenda.',   delay:5350,  pos:.446, color:BLANCO, hoverable:true},
   {t:'Isabel.',   delay:5550,  pos:.446, color:BLANCO, hoverable:true},
   {t:'Pérez.',    delay:5750,  pos:.446, color:BLANCO, hoverable:true},
-  // línea 6: links
-  {t:'cartografía.',delay:6400,pos:.460, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
-  {t:'redes.',    delay:6700,  pos:.460, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
+  // links — 3 renglones abajo, centrados, separados
+  {t:'cartografía.',delay:6400,pos:.490, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true, center:true},
+  {t:'redes.',    delay:6800,  pos:.514, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true, center:true},
 ];
 
 let _layout=null;
@@ -120,6 +120,8 @@ function buildLayout(){
     const totalW=group.reduce((s,e)=>s+ctx.measureText(e.t+'  ').width,0);
     // si no caben en la fila actual, saltar a nueva línea
     if(x>rowX(r) && x+totalW>W+20) newLine();
+    // centrar si el grupo lo pide
+    if(group[0].center){ r++; x=Math.max(0,(W-totalW)/2); }
     group.forEach(e=>pushTok({t:e.t+'  ', isEvento:true, eref:e}));
   }
 
