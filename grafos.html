@@ -145,11 +145,11 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-f
 
 /* ── TOGGLE PANEL ── */
 #panel-toggle{
-  display:none;position:fixed;top:12px;left:12px;
+  display:block;position:fixed;top:12px;
   z-index:30;background:rgba(0,0,5,.92);border:1px solid rgba(255,255,255,.2);
   color:#fff;font-style:italic;font-family:Georgia,serif;font-size:.72rem;
   padding:5px 14px;border-radius:12px;cursor:pointer;backdrop-filter:blur(8px);
-  transition:all 200ms;white-space:nowrap;
+  transition:left 300ms ease, background 200ms;white-space:nowrap;
 }
 #panel-toggle:hover{background:rgba(255,255,255,.08)}
 
@@ -1102,13 +1102,22 @@ cargar();
 })();
 
 // ── PANEL TOGGLE ─────────────────────────────────────────────────────────────
+const PANEL_W_R=260;
 let _panelRAbierto=true;
+function _updateTogglePosR(){
+  const btn=document.getElementById('panel-toggle');
+  if(btn) btn.style.left=(_panelRAbierto ? PANEL_W_R+6 : 12)+'px';
+}
 function togglePanelR(){
   _panelRAbierto=!_panelRAbierto;
-  document.getElementById('panel').classList.toggle('cerrado',!_panelRAbierto);
+  const panel=document.getElementById('panel');
+  panel.classList.toggle('cerrado',!_panelRAbierto);
+  document.getElementById('canvas').style.left=_panelRAbierto?PANEL_W_R+'px':'0';
   document.getElementById('panel-toggle').textContent=_panelRAbierto?'✕':'☰';
+  _updateTogglePosR();
   setTimeout(renderVista,320);
 }
+_updateTogglePosR();
 </script>
 </body>
 </html>

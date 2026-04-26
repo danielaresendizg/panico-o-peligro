@@ -280,11 +280,11 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-f
 
 /* ── TOGGLE PANEL ── */
 #panel-toggle{
-  display:none;position:fixed;top:12px;left:12px;
+  display:block;position:fixed;top:12px;
   z-index:30;background:rgba(0,0,5,.92);border:1px solid rgba(255,255,255,.2);
   color:#fff;font-style:italic;font-family:Georgia,serif;font-size:.72rem;
   padding:5px 14px;border-radius:12px;cursor:pointer;backdrop-filter:blur(8px);
-  transition:all 200ms;white-space:nowrap;
+  transition:left 300ms ease, background 200ms;white-space:nowrap;
 }
 #panel-toggle:hover{background:rgba(255,255,255,.08)}
 
@@ -1398,17 +1398,22 @@ function parsearCitas(raw){if(!raw)return[];if(Array.isArray(raw))return raw;try
 })();
 
 // ── PANEL TOGGLE ─────────────────────────────────────────────────────────────
+const PANEL_W=420;
 let _panelAbierto=true;
+function _updateTogglePos(){
+  const btn=document.getElementById('panel-toggle');
+  btn.style.left=(_panelAbierto ? PANEL_W+6 : 12)+'px';
+}
 function togglePanel(){
   _panelAbierto=!_panelAbierto;
   document.getElementById('panel').classList.toggle('cerrado',!_panelAbierto);
   document.getElementById('panel-toggle').textContent=_panelAbierto?'✕':'☰';
-  // ajustar cita-f
+  _updateTogglePos();
   const cf=document.getElementById('cita-f');
-  if(cf) cf.style.left=_panelAbierto?'294px':'14px';
-  // forzar resize del mapa
+  if(cf) cf.style.left=_panelAbierto?(PANEL_W+16)+'px':'14px';
   setTimeout(()=>{ if(window.map) window.map.resize(); },320);
 }
+_updateTogglePos();
 </script>
 </body>
 </html>
