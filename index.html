@@ -266,9 +266,28 @@ function drawFrame(now){
       if(cycle<0.4) op=cycle/0.4;
       else if(cycle<0.6) op=1;
       else op=(1-cycle)/0.4;
+
+      // intro: ruido empieza muy visible y se apaga en los primeros 3s
+      const introT=Math.max(0, Math.min(1, elapsed/3000));
+      const introMul=1 - introT*0.84; // de 1.0 → 0.16
+      const finalOp=op*(0.16 + (1-introT)*0.84);
+
       ctx.font=`italic ${tFS}px Georgia,serif`;
-      ctx.fillStyle=`rgba(255,255,255,${op*0.16})`;
+      ctx.fillStyle=`rgba(255,255,255,${finalOp})`;
       ctx.fillText(tok.t,tok.x,tok.y);
+    }
+
+    // pulso suave en tokens de evento ya visibles (no links)
+    if(tok.isEvento && !tok.eref.href){
+      const e=tok.eref;
+      const t=elapsed-e.delay;
+      if(t<800) return; // esperar que termine el fade-in
+      const pulso=0.88 + 0.12*Math.sin(elapsed*0.0008 + tok.x*0.05);
+      // redibujar con opacidad pulsante encima
+      const tFS2=tok.fs||FS;
+      ctx.font=`italic ${tFS2}px Georgia,serif`;
+      ctx.fillStyle=`rgba(255,255,255,${pulso*0.92})`;
+      ctx.fillText(tok.t, tok.x, tok.y);
     }
   });
 
