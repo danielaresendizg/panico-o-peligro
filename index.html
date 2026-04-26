@@ -268,16 +268,33 @@ function drawFrame(now){
         drawX=tok.x-(twHover-tok.tw)/2;
       }
 
-      // levitación para links: oscilación vertical lenta + brillo pulsante
+      // respiración yoga para links — expansión/contracción de escala con pausa
+      // ciclo: inhala 4s → pausa 1s → exhala 4s → pausa 1s = 10s total
       const allVisible=delays.every(d=>elapsed>=d);
-      const levY = (e.href && allVisible)
-        ? Math.sin(elapsed * 0.0012 + tok.x * 0.01) * 3
-        : 0;
-      const levBrillo = (e.href && allVisible)
-        ? 0.75 + 0.25*Math.sin(elapsed * 0.0012 + tok.x * 0.01)
-        : 1;
+      let breathScale=1, breathOp=1;
+      if(e.href && allVisible){
+        const cycle=((elapsed/1000) % 10); // 0–10s
+        let t10;
+        if(cycle<4)       t10=cycle/4;          // inhala 0→1
+        else if(cycle<5)  t10=1;                // pausa arriba
+        else if(cycle<9)  t10=1-(cycle-5)/4;   // exhala 1→0
+        else              t10=0;                // pausa abajo
+        // ease in-out suave
+        const ease=t10<0.5 ? 2*t10*t10 : 1-Math.pow(-2*t10+2,2)/2;
+        breathScale=1 + ease*0.18;             // escala 1.0 → 1.18
+        breathOp=0.7 + ease*0.3;              // opacidad 0.7 → 1.0
+      }
 
       // dibujar letra a letra según su delay individual
+      // para links: aplicar escala de respiración centrada en el token
+      const centerX=drawX+tok.tw/2;
+      const centerY=tok.y;
+      if(e.href && allVisible && breathScale!==1){
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.scale(breathScale, breathScale);
+        ctx.translate(-centerX, -centerY);
+      }
       let cx=drawX;
       for(let li=0;li<word.length;li++){
         const ch=word[li];
@@ -286,13 +303,14 @@ function drawFrame(now){
           const lop=Math.min(1,(elapsed-delays[li])/400);
           const pulso=(!e.href)
             ? (0.82 + 0.18*Math.sin(elapsed*0.00052 + tok.x*0.03 + li*0.4))
-            : levBrillo;
+            : breathOp;
           if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${lop*pulso})`;
           else ctx.fillStyle=`rgba(255,255,255,${lop*pulso*0.92})`;
-          ctx.fillText(ch, cx, tok.y + levY);
+          ctx.fillText(ch, cx, tok.y);
         }
         cx+=cw;
       }
+      if(e.href && allVisible && breathScale!==1) ctx.restore();
       ctx.font=`italic ${tFS}px Georgia,serif`;
 
     } else if(tok.isRuido){
