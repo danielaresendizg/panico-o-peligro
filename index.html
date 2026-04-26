@@ -59,8 +59,8 @@ const eventos=[
   {t:'Daniela Reséndiz',         delay:4700,  pos:.422, color:BLANCO, hoverable:true},
   {t:'Brenda Isabel Pérez.',     delay:5200,  pos:.428, color:BLANCO, hoverable:true},
   // links: azul puro, más abajo
-  {t:'Cartografía.',             delay:6000,  pos:.46,  color:'#0000ff', href:'cartografia.html', hoverable:true},
-  {t:'Redes.',                   delay:6400,  pos:.48,  color:'#0000ff', href:'grafos.html', hoverable:true},
+  {t:'Cartografía.',             delay:6000,  pos:.46,  color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
+  {t:'Redes.',                   delay:6400,  pos:.48,  color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
 ];
 
 let _layout=null;
@@ -162,11 +162,22 @@ function drawFrame(now){
       });
 
       const isHover=e.hoverable && _hoverTok===tok;
-      const fs=isHover ? tFS*2.8 : tFS;
-      const yOff=isHover ? tFS*0.8 : 0;
-      ctx.font=`italic ${fs}px Georgia,serif`;
+      const linkFS=e.mono ? tFS*2.2 : tFS;
+      const fs=isHover ? linkFS*1.4 : linkFS;
+      const yOff=e.mono ? tFS*0.8 : (isHover ? tFS*0.8 : 0);
+      if(e.mono){
+        ctx.font=`${fs}px "Courier New",Courier,monospace`;
+      } else {
+        ctx.font=`italic ${fs}px Georgia,serif`;
+      }
 
-      ctx.fillStyle=e.href ? `rgba(0,0,255,${op})` : `rgba(255,255,255,${op*0.92})`;
+      if(e.color==='#ffee00'){
+        ctx.fillStyle=`rgba(255,238,0,${op})`;
+      } else if(e.href){
+        ctx.fillStyle=`rgba(0,0,255,${op})`;
+      } else {
+        ctx.fillStyle=`rgba(255,255,255,${op*0.92})`;
+      }
       ctx.fillText(tok.t, tok.x, tok.y+yOff);
       ctx.font=`italic ${tFS}px Georgia,serif`;
 
