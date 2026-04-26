@@ -147,11 +147,11 @@ eventosDef.filter(e=>e.href).forEach(e=>{
   const word=e.t.trimEnd();
   const delays=[], typos=[];
   for(let i=0;i<word.length;i++){
-    if(tr()<0.18){
+    if(tr()<0.07){
       const ta=_linkCursor;
-      const te=ta+80+tr()*130;
+      const te=ta+300+tr()*400; // visible 300–700ms — humano que duda antes de borrar
       typos.push({i, char:randTypo(word[i]), showAt:ta, hideAt:te});
-      _linkCursor=te+30;
+      _linkCursor=te+80;
     }
     delays.push(_linkCursor);
     _linkCursor+=humanDelay(LINKS_CHAR_MS);
@@ -165,11 +165,11 @@ eventosDef.filter(e=>!e.href).forEach(e=>{
   const word=e.t.trimEnd();
   const delays=[], typos=[];
   for(let i=0;i<word.length;i++){
-    if(tr()<0.14){
+    if(tr()<0.06){
       const ta=_whiteCursor;
-      const te=ta+60+tr()*110;
+      const te=ta+250+tr()*350; // visible 250–600ms
       typos.push({i, char:randTypo(word[i]), showAt:ta, hideAt:te});
-      _whiteCursor=te+25;
+      _whiteCursor=te+70;
     }
     delays.push(_whiteCursor);
     _whiteCursor+=humanDelay(WHITE_CHAR_MS);
@@ -373,12 +373,14 @@ function drawFrame(now){
         cx+=ctx.measureText(word[li]).width;
       }
 
-      // dibujar typos activos (letra incorrecta que aún no se borró)
+      // dibujar typos: aparecen rápido, se borran despacio (150ms fade-out)
       for(const ty of typos){
-        if(elapsed>=ty.showAt && elapsed<ty.hideAt){
-          const fade=elapsed<ty.showAt+30 ? (elapsed-ty.showAt)/30 : 1;
-          if(e.href) ctx.fillStyle=`rgba(255,238,0,${fade*0.30})`;
-          else       ctx.fillStyle=`rgba(255,255,255,${fade*0.88})`;
+        if(elapsed>=ty.showAt && elapsed<ty.hideAt+150){
+          const fadeIn=Math.min(1,(elapsed-ty.showAt)/40);
+          const fadeOut=elapsed>=ty.hideAt ? 1-(elapsed-ty.hideAt)/150 : 1;
+          const op=fadeIn*fadeOut;
+          if(e.href) ctx.fillStyle=`rgba(255,238,0,${op*0.30})`;
+          else       ctx.fillStyle=`rgba(255,255,255,${op*0.88})`;
           ctx.fillText(ty.char, xPos[ty.i], tok.y);
         }
       }
