@@ -35,6 +35,14 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-f
   border-right:1px solid rgba(255,255,255,.06);
   display:flex;flex-direction:column;z-index:10;
   backdrop-filter:blur(12px);
+  transition:transform 300ms ease;
+}
+#panel.cerrado{transform:translateX(-100%)}
+@media(max-width:860px){
+  #panel{width:100vw;max-width:100vw;border-right:none}
+  .tab-c{-webkit-overflow-scrolling:touch;touch-action:pan-y}
+  #info{touch-action:pan-y;-webkit-overflow-scrolling:touch}
+  .pers-res{touch-action:pan-y;-webkit-overflow-scrolling:touch}
 }
 
 /* ── CABECERA ── */
@@ -277,14 +285,9 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-f
   transition:left 300ms ease, background 200ms;white-space:nowrap;
 }
 #panel-toggle:hover{background:rgba(255,255,255,.08)}
-/* Panel cerrado */
-#panel{transition:transform 300ms ease, width 300ms ease}
-#panel.cerrado{transform:translateX(-100%)}
-
-/* Mobile: panel ocupa todo el ancho, se puede cerrar para ver el mapa */
-@media(max-width:900px){
-  #panel{width:100vw;max-width:100vw}
-  #cita-f{left:14px;right:14px;bottom:70px}
+/* mobile extras */
+@media(max-width:860px){
+  #cita-f{left:14px!important;right:14px;bottom:70px}
   #stats{right:10px;top:10px}
   #mapa-tt{max-width:calc(100vw - 20px);left:10px!important}
 }
