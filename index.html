@@ -230,16 +230,20 @@ function drawFrame(now){
   const elapsed=now-startTime;
 
   const CW=getCanvasW(), CH=getCanvasH();
+  const DPR=window.devicePixelRatio||1;
   if(!_layout || CW!==_W || CH!==_H){
-    bg.width=CW; bg.height=CH;
+    // tamaño interno = tamaño visual × DPR para nitidez en Retina
+    bg.width=CW*DPR; bg.height=CH*DPR;
     bg.style.width=CW+'px'; bg.style.height=CH+'px';
-    pc.width=CW; pc.height=CH;
+    pc.width=CW*DPR; pc.height=CH*DPR;
     pc.style.width=CW+'px'; pc.style.height=CH+'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    px.setTransform(DPR,0,0,DPR,0,0);
     buildLayout();
   }
 
   const FS=getFS();
-  ctx.clearRect(0,0,_W,_H);
+  ctx.clearRect(0,0,CW,CH);
   ctx.shadowBlur=0;
   window._clickables=[];
 
@@ -372,18 +376,20 @@ requestAnimationFrame(drawFrame);
 const pc=document.getElementById('pc');
 const px=pc.getContext('2d');
 // canvas se inicializa en drawFrame
+// partículas usan coordenadas lógicas (el scale DPR lo maneja el contexto)
 const pts=Array.from({length:35},()=>({
-  x:Math.random()*pc.width,y:Math.random()*pc.height,
+  x:Math.random()*getCanvasW(),y:Math.random()*getCanvasH(),
   s:Math.random()*.5+.1,vx:(Math.random()-.5)*.15,vy:(Math.random()-.5)*.15,
   life:Math.random(),ml:Math.random()*.006+.002,
   c:Math.random()>.5?'rgba(255,255,255,':'rgba(0,0,200,'
 }));
 (function anim(){
-  px.clearRect(0,0,pc.width,pc.height);
+  const CW=getCanvasW(), CH=getCanvasH();
+  px.clearRect(0,0,CW,CH);
   pts.forEach(p=>{
     p.x+=p.vx;p.y+=p.vy;p.life+=p.ml;
     const op=p.life<.5?p.life*2:(1-p.life)*2;
-    if(p.life>=1){p.life=0;p.x=Math.random()*pc.width;p.y=Math.random()*pc.height;}
+    if(p.life>=1){p.life=0;p.x=Math.random()*CW;p.y=Math.random()*CH;}
     px.beginPath();px.arc(p.x,p.y,p.s,0,Math.PI*2);
     px.fillStyle=p.c+(op*.14)+')';px.fill();
   });
