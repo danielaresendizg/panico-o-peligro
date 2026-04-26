@@ -44,32 +44,35 @@ let _ruidoPhases=[];
 
 // Font size adaptado: en mobile más pequeño para que quepan más tokens por fila
 function getFS(){ return window.innerWidth < 500 ? 20 : window.innerWidth < 800 ? 26 : 32; }
-// Cada grupo tiene el mismo pos — se insertan consecutivos, garantizan misma hilera
-const eventos=[
-  // línea 1: título
-  {t:'Pánico.',   delay: 500,  pos:.38,  color:BLANCO},
-  {t:'Peligro.',  delay: 900,  pos:.38,  color:BLANCO},
-  // línea 2: autora
-  {t:'María.',    delay:1600,  pos:.404, color:BLANCO},
-  {t:'Luisa.',    delay:1900,  pos:.404, color:BLANCO},
-  {t:'Puga.',     delay:2200,  pos:.404, color:BLANCO},
-  // línea 3: lugar
-  {t:'Centro.',   delay:2800,  pos:.418, color:BLANCO},
-  {t:'Cultural.', delay:3100,  pos:.418, color:BLANCO},
-  {t:'España.',   delay:3400,  pos:.418, color:BLANCO},
-  // línea 4: fecha
-  {t:'25.06.2026.',delay:4000, pos:.432, color:BLANCO},
-  // línea 5: artistas — separadas por espacio visual
-  {t:'Daniela.',  delay:4700,  pos:.446, color:BLANCO, hoverable:true},
-  {t:'Reséndiz.', delay:4950,  pos:.446, color:BLANCO, hoverable:true},
-  {t:'—',         delay:5150,  pos:.446, color:BLANCO},
-  {t:'Brenda.',   delay:5350,  pos:.446, color:BLANCO, hoverable:true},
-  {t:'Isabel.',   delay:5550,  pos:.446, color:BLANCO, hoverable:true},
-  {t:'Pérez.',    delay:5750,  pos:.446, color:BLANCO, hoverable:true},
-  // links — 3 renglones abajo, centrados, separados
-  {t:'cartografía.',delay:6400,pos:.490, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true, center:true},
-  {t:'redes.',    delay:6800,  pos:.514, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true, center:true},
+// Grupos de datos — pos se calcula dinámicamente en buildLayout()
+// group: id del grupo (0-7), mismo grupo = misma hilera garantizada
+const eventosDef=[
+  // grupo 0: título
+  {t:'Pánico.',    delay: 500,  grupo:0, color:BLANCO},
+  {t:'Peligro.',   delay: 900,  grupo:0, color:BLANCO},
+  // grupo 1: autora
+  {t:'María.',     delay:1600,  grupo:1, color:BLANCO},
+  {t:'Luisa.',     delay:1900,  grupo:1, color:BLANCO},
+  {t:'Puga.',      delay:2200,  grupo:1, color:BLANCO},
+  // grupo 2: lugar
+  {t:'Centro.',    delay:2800,  grupo:2, color:BLANCO},
+  {t:'Cultural.',  delay:3100,  grupo:2, color:BLANCO},
+  {t:'España.',    delay:3400,  grupo:2, color:BLANCO},
+  // grupo 3: fecha
+  {t:'25.06.2026.',delay:4000,  grupo:3, color:BLANCO},
+  // grupo 4: artistas
+  {t:'Daniela.',   delay:4700,  grupo:4, color:BLANCO, hoverable:true},
+  {t:'Reséndiz.',  delay:4950,  grupo:4, color:BLANCO, hoverable:true},
+  {t:'—',          delay:5150,  grupo:4, color:BLANCO},
+  {t:'Brenda.',    delay:5350,  grupo:4, color:BLANCO, hoverable:true},
+  {t:'Isabel.',    delay:5550,  grupo:4, color:BLANCO, hoverable:true},
+  {t:'Pérez.',     delay:5750,  grupo:4, color:BLANCO, hoverable:true},
+  // grupo 5: link cartografía (centrado)
+  {t:'cartografía.',delay:6400, grupo:5, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true, center:true},
+  // grupo 6: link redes (centrado)
+  {t:'redes.',     delay:6800,  grupo:6, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true, center:true},
 ];
+const NUM_GRUPOS=7;
 
 let _layout=null;
 let _W=0,_H=0;
@@ -88,6 +91,11 @@ function buildLayout(){
   const rows=Math.ceil(H/lh)+2;
   const totalRuido=rows*tokPerRow;
 
+  // Distribuir grupos en franja 25%–65% del total de tokens
+  // así siempre caben en pantalla independientemente del tamaño
+  const startPos=0.25, endPos=0.65;
+  const step=(endPos-startPos)/(NUM_GRUPOS-1);
+  const eventos=eventosDef.map(e=>({...e, pos:startPos+e.grupo*step}));
   const evSorted=[...eventos].sort((a,b)=>a.pos-b.pos);
 
   const layout=[];
