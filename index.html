@@ -77,9 +77,9 @@ function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
 const RUIDO_BRIGHT_MS=0;
-const LETRAS_START=0;        // letras y ruido arrancan exactamente juntos
-const LETRAS_END=16000;
-const LINKS_START=14000;
+const LETRAS_START=0;
+const LETRAS_END=8000;       // todas las letras visibles en 8s
+const LINKS_START=7000;
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -312,7 +312,7 @@ function drawFrame(now){
         const ch=word[li];
         const cw=ctx.measureText(ch).width;
         if(elapsed>=delays[li]){
-          const lop=Math.min(1,(elapsed-delays[li])/2000);
+          const lop=Math.min(1,(elapsed-delays[li])/800);
           const pulso=e.href ? breathOp
             : (0.84+0.16*Math.sin(elapsed*0.00048+tok.x*0.02+li*0.35));
           if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${lop*pulso})`;
