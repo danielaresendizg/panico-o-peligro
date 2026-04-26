@@ -78,8 +78,8 @@ function getCanvasH(){ return getBreakpoint().h; }
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
 const RUIDO_BRIGHT_MS=0;
 const LETRAS_START=0;
-const LETRAS_END=8000;       // todas las letras visibles en 8s
-const LINKS_START=7000;
+const LETRAS_END=8000;
+const LINKS_START=0;         // links visibles desde el inicio
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -277,20 +277,23 @@ function drawFrame(now){
       const drawX=tok.x;
       const allVisible=delays.every(d=>elapsed>=d);
 
-      // ── RESPIRACIÓN ORGÁNICA — amplia para links ─────────────────────
+      // ── RESPIRACIÓN ORGÁNICA — empieza desde que hay alguna letra visible
       let breathScale=1, breathOp=1;
-      if(e.href && allVisible){
+      if(e.href && delays.some(d=>elapsed>=d)){
         const ts=tokenSeed(Math.round(tok.x), Math.round(tok.y));
         const period=11000+(ts%3000);
         const phase=(ts%1000)/1000;
         const t=((elapsed/period+phase)%1);
-        // onda compuesta — no mecánica
         const wave=0.6*Math.sin(t*Math.PI*2)
                   +0.25*Math.sin(t*Math.PI*4+0.8)
                   +0.15*Math.sin(t*Math.PI*1.3+1.4);
         const norm=(wave+1)/2;
-        breathScale=1+norm*0.45;  // expansión 1.0 → 1.45
-        breathOp=0.55+norm*0.45;  // opacidad 0.55 → 1.0
+        breathScale=1+norm*0.45;
+        breathOp=0.55+norm*0.45;
+
+        // pulso extra de color al terminar el intro — señal sutil en mobile
+        const introT=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/2000));
+        if(introT>0) breathOp=Math.min(1, breathOp+introT*0.3);
       }
 
       // hover: shadowBlur para grosor sin cambiar tamaño
@@ -301,7 +304,7 @@ function drawFrame(now){
 
       // ── DIBUJAR LETRAS — fade-in lento ───────────────────────────────
       const centerX=drawX+tok.tw/2;
-      if(e.href && allVisible && breathScale!==1){
+      if(e.href && breathScale!==1){
         ctx.save();
         ctx.translate(centerX, tok.y);
         ctx.scale(breathScale, breathScale);
@@ -321,7 +324,7 @@ function drawFrame(now){
         }
         cx+=cw;
       }
-      if(e.href && allVisible && breathScale!==1) ctx.restore();
+      if(e.href && breathScale!==1) ctx.restore();
       ctx.shadowBlur=0;
       ctx.font=`italic ${tFS}px Georgia,serif`;
 
