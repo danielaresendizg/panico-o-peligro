@@ -93,7 +93,7 @@ function buildLayout(){
 
   // Distribuir grupos en franja 25%–65% del total de tokens
   // así siempre caben en pantalla independientemente del tamaño
-  const startPos=0.25, endPos=0.65;
+  const startPos=0.22, endPos=0.60;
   const step=(endPos-startPos)/(NUM_GRUPOS-1);
   const eventos=eventosDef.map(e=>({...e, pos:startPos+e.grupo*step}));
   const evSorted=[...eventos].sort((a,b)=>a.pos-b.pos);
@@ -118,19 +118,30 @@ function buildLayout(){
   }
 
   function flushEventoGroup(){
-    // recoge todos los eventos con el mismo pos que evSorted[ei]
     const groupPos=evSorted[ei].pos;
     const group=[];
     while(ei<evSorted.length && evSorted[ei].pos===groupPos){
       group.push(evSorted[ei]); ei++;
     }
-    // medir ancho total del grupo
     const totalW=group.reduce((s,e)=>s+ctx.measureText(e.t+'  ').width,0);
-    // si no caben en la fila actual, saltar a nueva línea
-    if(x>rowX(r) && x+totalW>W+20) newLine();
-    // centrar si el grupo lo pide
-    if(group[0].center){ r++; x=Math.max(0,(W-totalW)/2); }
-    group.forEach(e=>pushTok({t:e.t+'  ', isEvento:true, eref:e}));
+
+    if(group[0].center){
+      // renglón nuevo limpio, x centrado
+      r++; x=Math.max(0, Math.round((W-totalW)/2));
+      // escribir directamente sin que pushTok cambie la fila
+      group.forEach(e=>{
+        const tw=ctx.measureText(e.t+'  ').width;
+        const y=r*lh+FS;
+        const tok={t:e.t+'  ', isEvento:true, eref:e, x, y, tw, fs:FS};
+        layout.push(tok);
+        x+=tw;
+      });
+      r++; x=rowX(r); // avanzar a línea siguiente para el ruido
+    } else {
+      // grupo normal: saltar línea si no cabe
+      if(x>rowX(r) && x+totalW>W+20) newLine();
+      group.forEach(e=>pushTok({t:e.t+'  ', isEvento:true, eref:e}));
+    }
   }
 
   for(let i=0;i<totalRuido;i++){
