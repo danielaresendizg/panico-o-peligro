@@ -133,35 +133,38 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-f
 }
 #intro-r-entrar:hover{color:#fff;border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.05)}
 
+/* ── ROTATE NOTICE (portrait mobile) ── */
+#rotate-notice{
+  display:none;position:fixed;inset:0;z-index:300;background:#000005;
+  align-items:center;justify-content:center;flex-direction:column;gap:16px;
+}
+#rotate-notice p{
+  font-family:Georgia,serif;font-style:italic;font-size:1rem;
+  color:rgba(255,255,255,.7);text-align:center;padding:0 32px;line-height:1.8;
+}
+
 /* ── TOGGLE MOBILE ── */
 #panel-toggle{
-  display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  display:none;position:fixed;top:14px;left:14px;
   z-index:30;background:rgba(0,0,5,.92);border:1px solid rgba(255,255,255,.2);
-  color:#fff;font-style:italic;font-family:Georgia,serif;font-size:.85rem;
-  padding:9px 24px;border-radius:20px;cursor:pointer;backdrop-filter:blur(8px);
+  color:#fff;font-style:italic;font-family:Georgia,serif;font-size:.75rem;
+  padding:6px 16px;border-radius:14px;cursor:pointer;backdrop-filter:blur(8px);
   transition:all 200ms;
 }
 #panel-toggle:hover{background:rgba(255,255,255,.08)}
 
-@media(max-width:700px){
-  #panel{
-    width:100%!important;height:60vh;
-    top:auto;bottom:0;left:0;right:0;
-    border-right:none;border-top:1px solid rgba(255,255,255,.1);
-    border-radius:16px 16px 0 0;
-    transform:translateY(100%);transition:transform 350ms ease;
-  }
-  #panel.abierto{transform:translateY(0)}
-  #canvas{left:0!important;bottom:60vh}
-  #titulo{left:12px;top:8px;font-size:.6rem}
-  #volver{bottom:calc(60vh + 10px);right:10px}
-  #panel-toggle{display:block}
-  #tt{max-width:calc(100vw - 20px)}
+@media(orientation:portrait){
+  #rotate-notice{display:flex}
 }
-@media(max-width:700px) and (orientation:landscape){
-  #panel{width:55%!important;height:100%;top:0;bottom:0;border-radius:0;transform:translateX(-100%)}
-  #panel.abierto{transform:translateX(0)}
-  #canvas{left:0!important;bottom:0}
+@media(orientation:landscape) and (max-height:700px){
+  #panel{width:240px}
+  #canvas{left:240px}
+  #titulo{left:254px}
+  #panel-toggle{display:block}
+  #panel.cerrado{transform:translateX(-100%);transition:transform 300ms ease}
+  #panel.cerrado~#canvas{left:0}
+  #tt{max-width:calc(100vw - 260px)}
+  #volver{bottom:10px;right:10px;font-size:.6rem;padding:5px 10px}
 }
 </style>
 </head>
@@ -257,8 +260,9 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-f
 <div id="canvas"></div>
 <div id="titulo"></div>
 <div id="tt"></div>
+<div id="rotate-notice"><p>Gira tu dispositivo<br>para ver los diagramas.</p></div>
 <div id="volver" onclick="window.close()">← Volver al mapa</div>
-<button id="panel-toggle" onclick="togglePanelR()">Info</button>
+<button id="panel-toggle" onclick="togglePanelR()">☰ Info</button>
 
 <script>
 // ── PARTÍCULAS ───────────────────────────────────────────────────────────────
@@ -1097,11 +1101,13 @@ cargar();
 })();
 
 // ── MOBILE PANEL TOGGLE ──────────────────────────────────────────────────────
-let _panelRAbierto=false;
+let _panelRAbierto=true;
 function togglePanelR(){
   _panelRAbierto=!_panelRAbierto;
-  document.getElementById('panel').classList.toggle('abierto',_panelRAbierto);
-  document.getElementById('panel-toggle').textContent=_panelRAbierto?'Cerrar':'Info';
+  document.getElementById('panel').classList.toggle('cerrado',!_panelRAbierto);
+  document.getElementById('panel-toggle').textContent=_panelRAbierto?'✕ Cerrar':'☰ Info';
+  // resize el svg al cambiar panel
+  setTimeout(renderVista,320);
 }
 </script>
 </body>
