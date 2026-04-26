@@ -126,9 +126,21 @@ const eventosDef=[
 ];
 const NUM_GRUPOS=7;
 
-// Delays secuenciales — máquina de escribir
-// Los links se escriben en orden (cartografía primero, redes después)
-// Las blancas se escriben renglón a renglón en orden de aparición
+// escritura humana: ráfagas, pausas torpes, micro-vacilaciones
+// usa PRNG propio para ser determinista (mismo resultado cada recarga)
+let _tseed=7919;
+function tr(){ _tseed=(_tseed*1664525+1013904223)>>>0; return _tseed/4294967296; }
+function humanDelay(base){
+  const r=tr();
+  // 10% probabilidad de pausa larga (duda, buscar tecla)
+  if(r<0.10) return base*(2.5+tr()*3.0);
+  // 20% ráfaga rápida
+  if(r<0.30) return base*0.25;
+  // resto: variación normal con ruido gaussiano aproximado
+  const g=(tr()+tr()+tr()-1.5)/1.5; // aprox normal centrado en 0
+  return Math.max(20, base*(1+g*0.6));
+}
+
 let _linkCursor=LINKS_WRITE_START;
 let _whiteCursor=WHITE_WRITE_START;
 eventosDef.forEach(e=>{
@@ -137,15 +149,15 @@ eventosDef.forEach(e=>{
   if(e.href){
     for(let i=0;i<word.length;i++){
       delays.push(_linkCursor);
-      _linkCursor+=LINKS_CHAR_MS;
+      _linkCursor+=humanDelay(LINKS_CHAR_MS);
     }
-    _linkCursor+=600; // pausa entre cartografía y redes
+    _linkCursor+=400+tr()*600; // pausa humana entre cartografía y redes
   } else {
     for(let i=0;i<word.length;i++){
       delays.push(_whiteCursor);
-      _whiteCursor+=WHITE_CHAR_MS;
+      _whiteCursor+=humanDelay(WHITE_CHAR_MS);
     }
-    _whiteCursor+=180; // pausa entre palabras
+    _whiteCursor+=120+tr()*200; // pausa entre palabras
   }
   e._letterDelays=delays;
 });
