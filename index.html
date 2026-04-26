@@ -52,13 +52,13 @@ let _ruidoPhases=[];
 // En pantallas anchas (landscape/desktop) hay más tokens por fila → grupos más dispersos
 // → usar rangos más estrechos para mantenerlos juntos y en la zona media
 const BREAKPOINTS=[
-  {name:'mobile-v',   w:390,  h:844,  fs:11, start:.26, end:.46},
-  {name:'mobile-h',   w:844,  h:390,  fs:11, start:.30, end:.55},
-  {name:'tablet-v',   w:768,  h:1024, fs:14, start:.30, end:.52},
-  {name:'tablet-h',   w:1024, h:768,  fs:14, start:.30, end:.54},
-  {name:'macbook',    w:1280, h:800,  fs:22, start:.31, end:.52},
-  {name:'laptop',     w:1440, h:900,  fs:24, start:.32, end:.52},
-  {name:'desktop',    w:1920, h:1080, fs:28, start:.33, end:.51},
+  {name:'mobile-v',  w:390,  h:844,  fs:11},
+  {name:'mobile-h',  w:844,  h:390,  fs:11},
+  {name:'tablet-v',  w:768,  h:1024, fs:14},
+  {name:'tablet-h',  w:1024, h:768,  fs:14},
+  {name:'macbook',   w:1280, h:800,  fs:22},
+  {name:'laptop',    w:1440, h:900,  fs:24},
+  {name:'desktop',   w:1920, h:1080, fs:28},
 ];
 
 function getBreakpoint(){
@@ -112,80 +112,68 @@ function buildLayout(){
   _W=W; _H=H;
   _seed=42;
   const FS=getFS();
-
   const lh=Math.round(FS*1.52);
   ctx.font=`italic ${FS}px Georgia,serif`;
 
-  const avgTW=FS*4.8;
-  const tokPerRow=Math.ceil(W/avgTW)+2;
-  const rows=Math.ceil(H/lh)+2;
-  const totalRuido=rows*tokPerRow;
+  // ── PASO 1: construir grupos de evento con posición X garantizada ──────────
+  // Cada grupo = una fila. Calculamos qué fila ocupará cada grupo centrado verticalmente.
 
-  // Distribuir grupos en franja 25%–65% del total de tokens
-  // así siempre caben en pantalla independientemente del tamaño
-  const {start:startPos, end:endPos}=getBreakpoint();
-  const step=(endPos-startPos)/(NUM_GRUPOS-1);
-  const eventos=eventosDef.map(e=>({...e, pos:startPos+e.grupo*step}));
-  const evSorted=[...eventos].sort((a,b)=>a.pos-b.pos);
+  // Agrupar eventosDef por grupo id
+  const gruposMap=new Map();
+  eventosDef.forEach(e=>{
+    if(!gruposMap.has(e.grupo)) gruposMap.set(e.grupo,[]);
+    gruposMap.get(e.grupo).push(e);
+  });
+  const gruposArr=[...gruposMap.entries()].sort((a,b)=>a[0]-b[0]);
+  const nGrupos=gruposArr.length; // 7 grupos = 7 filas de datos
 
+  // Altura total del bloque de datos (7 filas + 1 fila extra entre links)
+  const bloqueH=nGrupos*lh;
+  // Fila donde empieza el bloque — centrado verticalmente
+  const rowStart=Math.round((H - bloqueH) / (2*lh));
+
+  // Para cada grupo, calcular x de inicio según si está centrado o no
+  const eventoLayout=[]; // {e, x, y, tw, fs}
+  gruposArr.forEach(([gid, items], gi)=>{
+    const row=rowStart+gi;
+    const y=row*lh+FS;
+    const totalW=items.reduce((s,e)=>s+ctx.measureText(e.t+'  ').width,0);
+    const isCenter=items[0].center;
+    // centrado siempre horizontalmente para todos los grupos
+    let x=Math.max(4, Math.round((W-totalW)/2));
+    items.forEach(e=>{
+      const tw=ctx.measureText(e.t+'  ').width;
+      eventoLayout.push({e, x, y, tw, fs:FS, row});
+      x+=tw;
+    });
+  });
+
+  // ── PASO 2: construir ruido que llena todo el canvas ──────────────────────
+  // El ruido ocupa todas las filas, pero las filas del bloque de datos se saltan
+  const eventoRows=new Set(eventoLayout.map(t=>t.row));
   const layout=[];
   _ruidoPhases=[];
-  let ei=0;
-  let r=0, x=0;
 
   function rowX(row){ return -(row*71)%Math.min(140,W*0.2); }
-  x=rowX(0);
+  const totalRows=Math.ceil(H/lh)+2;
 
-  function newLine(){ r++; x=rowX(r); }
-
-  function pushTok(tok){
-    const tw=ctx.measureText(tok.t+'  ').width;
-    if(x+tw>W+20){ r++; x=rowX(r); }
-    const y=r*lh+FS;
-    tok.x=x; tok.y=y; tok.tw=tw; tok.fs=FS;
-    layout.push(tok);
-    x+=tw;
-  }
-
-  function flushEventoGroup(){
-    const groupPos=evSorted[ei].pos;
-    const group=[];
-    while(ei<evSorted.length && evSorted[ei].pos===groupPos){
-      group.push(evSorted[ei]); ei++;
-    }
-    const totalW=group.reduce((s,e)=>s+ctx.measureText(e.t+'  ').width,0);
-
-    if(group[0].center){
-      // renglón nuevo limpio, x centrado
-      r++; x=Math.max(0, Math.round((W-totalW)/2));
-      // escribir directamente sin que pushTok cambie la fila
-      group.forEach(e=>{
-        const tw=ctx.measureText(e.t+'  ').width;
-        const y=r*lh+FS;
-        const tok={t:e.t+'  ', isEvento:true, eref:e, x, y, tw, fs:FS};
-        layout.push(tok);
-        x+=tw;
-      });
-      r++; x=rowX(r); // avanzar a línea siguiente para el ruido
-    } else {
-      // grupo normal: saltar línea si no cabe
-      if(x>rowX(r) && x+totalW>W+20) newLine();
-      group.forEach(e=>pushTok({t:e.t+'  ', isEvento:true, eref:e}));
-    }
-  }
-
-  for(let i=0;i<totalRuido;i++){
-    const pos=i/totalRuido;
-    while(ei<evSorted.length && pos>=evSorted[ei].pos) flushEventoGroup();
-    const burst=Math.floor(seededRnd()*2)+1;
-    for(let b=0;b<burst;b++){
-      const tok={t:rnd()+'.  ', isRuido:true, phaseIdx:_ruidoPhases.length};
+  for(let row=0;row<totalRows;row++){
+    if(eventoRows.has(row)) continue; // esta fila la ocupa un grupo de datos
+    let x=rowX(row);
+    const y=row*lh+FS;
+    while(x<W+20){
+      const t=rnd()+'.  ';
+      const tw=ctx.measureText(t).width;
+      layout.push({t, isRuido:true, x, y, tw, fs:FS, phaseIdx:_ruidoPhases.length});
       _ruidoPhases.push({phase:seededRnd(), period:3000+seededRnd()*5000});
-      pushTok(tok);
+      x+=tw;
     }
-    i+=burst-1;
   }
-  while(ei<evSorted.length) flushEventoGroup();
+
+  // ── PASO 3: añadir eventos al layout ──────────────────────────────────────
+  eventoLayout.forEach(({e,x,y,tw,fs})=>{
+    layout.push({t:e.t+'  ', isEvento:true, eref:e, x, y, tw, fs});
+  });
 
   _layout=layout;
   window._clickables=[];
