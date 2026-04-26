@@ -231,17 +231,17 @@ function drawFrame(now){
   const elapsed=now-startTime;
 
   const CW=getCanvasW(), CH=getCanvasH();
-  const DPR=window.devicePixelRatio||1;
+  const DPR=Math.max(window.devicePixelRatio||1, 2); // mínimo 2x para Retina
   if(!_layout || CW!==_W || CH!==_H){
-    // tamaño interno = tamaño visual × DPR para nitidez en Retina
     bg.width=CW*DPR; bg.height=CH*DPR;
     bg.style.width=CW+'px'; bg.style.height=CH+'px';
     pc.width=CW*DPR; pc.height=CH*DPR;
     pc.style.width=CW+'px'; pc.style.height=CH+'px';
-    ctx.setTransform(DPR,0,0,DPR,0,0);
-    px.setTransform(DPR,0,0,DPR,0,0);
     buildLayout();
   }
+
+  // resetear y aplicar escala cada frame — garantiza nitidez siempre
+  ctx.setTransform(DPR,0,0,DPR,0,0);
 
   const FS=getFS();
   ctx.clearRect(0,0,CW,CH);
@@ -386,6 +386,8 @@ const pts=Array.from({length:35},()=>({
 }));
 (function anim(){
   const CW=getCanvasW(), CH=getCanvasH();
+  const DPR=Math.max(window.devicePixelRatio||1,2);
+  px.setTransform(DPR,0,0,DPR,0,0);
   px.clearRect(0,0,CW,CH);
   pts.forEach(p=>{
     p.x+=p.vx;p.y+=p.vy;p.life+=p.ml;
