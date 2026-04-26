@@ -308,20 +308,20 @@ function drawFrame(now){
       // tempo global — mismo que el ruido, es el metrónomo de todo
       const masterT=MASTER_PERIOD*(0.35+calmT*0.65);
 
-      // ── RESPIRACIÓN letras amarillas — escala modulada por masterT
+      // ── RESPIRACIÓN letras amarillas — curva seno suave, mismo tempo que ruido
       let breathScale=1, breathOp=1;
       if(e.href && delays.some(d=>elapsed>=d)){
         const ts=tokenSeed(Math.round(tok.x), Math.round(tok.y));
         const phase=(ts%1000)/1000;
-        const cycle=((elapsed/masterT)+phase)%1;
-        let raw;
-        if(cycle<0.4) raw=cycle/0.4;
-        else if(cycle<0.6) raw=1;
-        else raw=(1-cycle)/0.4;
-        // en calma: amplitud crece suavemente, escala y opacidad desde el mismo pulso
+        // sin² da expansión/contracción continua sin esquinas — como un pulmón
+        const angle=((elapsed/masterT)+phase)*Math.PI*2;
+        const raw=(Math.sin(angle)*0.5+0.5); // 0..1 suave
+        // micro-irregularidad: segundo armónico muy sutil para no parecer metrónomo
+        const raw2=(Math.sin(angle*1.618+1.2)*0.5+0.5);
+        const breath=raw*0.75+raw2*0.25;
         const breathAmp=Math.pow(calmT,3);
-        breathScale=1+raw*0.45*breathAmp;
-        breathOp=1-(1-raw)*0.3*breathAmp;
+        breathScale=1+breath*0.45*breathAmp;
+        breathOp=1-(1-breath)*0.3*breathAmp;
       }
 
       // hover: shadowBlur para grosor sin cambiar tamaño
