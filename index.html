@@ -44,23 +44,31 @@ let _ruidoPhases=[];
 
 // Font size adaptado: en mobile más pequeño para que quepan más tokens por fila
 function getFS(){ return window.innerWidth < 500 ? 20 : window.innerWidth < 800 ? 26 : 32; }
+// Cada grupo tiene el mismo pos — se insertan consecutivos, garantizan misma hilera
 const eventos=[
-  {t:'Pánico',                   delay: 500,  pos:.36,  color:'#ffee00', mono:true},
-  {t:'o',                        delay: 750,  pos:.36,  color:BLANCO},
-  {t:'Peligro',                  delay:1000,  pos:.36,  color:'#ffee00', mono:true},
-  {t:'María',                    delay:1600,  pos:.376, color:BLANCO},
-  {t:'Luisa',                    delay:1850,  pos:.376, color:BLANCO},
-  {t:'Puga.',                    delay:2100,  pos:.376, color:BLANCO},
-  {t:'Centro Cultural España.',  delay:2700,  pos:.392, color:BLANCO},
-  {t:'25',                       delay:3400,  pos:.408, color:BLANCO},
-  {t:'de',                       delay:3600,  pos:.408, color:BLANCO},
-  {t:'junio,',                   delay:3800,  pos:.408, color:BLANCO},
-  {t:'2026.',                    delay:4050,  pos:.408, color:BLANCO},
-  {t:'Daniela Reséndiz',         delay:4700,  pos:.422, color:BLANCO, hoverable:true},
-  {t:'Brenda Isabel Pérez.',     delay:5200,  pos:.428, color:BLANCO, hoverable:true},
-  // links: azul puro, más abajo
-  {t:'cartografía',              delay:6000,  pos:.46,  color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
-  {t:'redes',                    delay:6400,  pos:.48,  color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
+  // línea 1: título
+  {t:'Pánico.',   delay: 500,  pos:.38,  color:BLANCO},
+  {t:'Peligro.',  delay: 900,  pos:.38,  color:BLANCO},
+  // línea 2: autora
+  {t:'María.',    delay:1600,  pos:.404, color:BLANCO},
+  {t:'Luisa.',    delay:1900,  pos:.404, color:BLANCO},
+  {t:'Puga.',     delay:2200,  pos:.404, color:BLANCO},
+  // línea 3: lugar
+  {t:'Centro.',   delay:2800,  pos:.418, color:BLANCO},
+  {t:'Cultural.', delay:3100,  pos:.418, color:BLANCO},
+  {t:'España.',   delay:3400,  pos:.418, color:BLANCO},
+  // línea 4: fecha
+  {t:'25.06.2026.',delay:4000, pos:.432, color:BLANCO},
+  // línea 5: artistas — separadas por espacio visual
+  {t:'Daniela.',  delay:4700,  pos:.446, color:BLANCO, hoverable:true},
+  {t:'Reséndiz.', delay:4950,  pos:.446, color:BLANCO, hoverable:true},
+  {t:'—',         delay:5150,  pos:.446, color:BLANCO},
+  {t:'Brenda.',   delay:5350,  pos:.446, color:BLANCO, hoverable:true},
+  {t:'Isabel.',   delay:5550,  pos:.446, color:BLANCO, hoverable:true},
+  {t:'Pérez.',    delay:5750,  pos:.446, color:BLANCO, hoverable:true},
+  // línea 6: links
+  {t:'cartografía.',delay:6400,pos:.460, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
+  {t:'redes.',    delay:6700,  pos:.460, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
 ];
 
 let _layout=null;
@@ -90,6 +98,8 @@ function buildLayout(){
   function rowX(row){ return -(row*71)%Math.min(140,W*0.2); }
   x=rowX(0);
 
+  function newLine(){ r++; x=rowX(r); }
+
   function pushTok(tok){
     const tw=ctx.measureText(tok.t+'  ').width;
     if(x+tw>W+20){ r++; x=rowX(r); }
@@ -99,13 +109,23 @@ function buildLayout(){
     x+=tw;
   }
 
+  function flushEventoGroup(){
+    // recoge todos los eventos con el mismo pos que evSorted[ei]
+    const groupPos=evSorted[ei].pos;
+    const group=[];
+    while(ei<evSorted.length && evSorted[ei].pos===groupPos){
+      group.push(evSorted[ei]); ei++;
+    }
+    // medir ancho total del grupo
+    const totalW=group.reduce((s,e)=>s+ctx.measureText(e.t+'  ').width,0);
+    // si no caben en la fila actual, saltar a nueva línea
+    if(x>rowX(r) && x+totalW>W+20) newLine();
+    group.forEach(e=>pushTok({t:e.t+'  ', isEvento:true, eref:e}));
+  }
+
   for(let i=0;i<totalRuido;i++){
     const pos=i/totalRuido;
-    while(ei<evSorted.length && pos>=evSorted[ei].pos){
-      const e=evSorted[ei];
-      pushTok({t:e.t+'  ', isEvento:true, eref:e});
-      ei++;
-    }
+    while(ei<evSorted.length && pos>=evSorted[ei].pos) flushEventoGroup();
     const burst=Math.floor(seededRnd()*3)+1;
     for(let b=0;b<burst;b++){
       const tok={t:rnd()+'.  ', isRuido:true, phaseIdx:_ruidoPhases.length};
@@ -114,14 +134,7 @@ function buildLayout(){
     }
     i+=burst-1;
   }
-  while(ei<evSorted.length){
-    const e=evSorted[ei];
-    pushTok({t:e.t+'  ', isEvento:true, eref:e});
-    ei++;
-    const tok={t:rnd()+'.  ', isRuido:true, phaseIdx:_ruidoPhases.length};
-    _ruidoPhases.push({phase:seededRnd(), period:3000+seededRnd()*5000});
-    pushTok(tok);
-  }
+  while(ei<evSorted.length) flushEventoGroup();
 
   _layout=layout;
   window._clickables=[];
