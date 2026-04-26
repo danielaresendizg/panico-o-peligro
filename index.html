@@ -79,10 +79,10 @@ function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
 const RUIDO_BRIGHT_MS=0;
-const LETRAS_START=200;      // letras normales un poco después
+const LETRAS_START=200;
 const LETRAS_END=5000;
-const LINKS_START=0;         // links aparecen primero
-const BREATH_START=17000;    // respiración solo después de la transición
+const LINKS_START=0;
+const BREATH_START=6000;     // respiración empieza justo después de la parte densa
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -288,7 +288,7 @@ function drawFrame(now){
         const ts=tokenSeed(Math.round(tok.x), Math.round(tok.y));
         // fade-in suave de la respiración en los primeros 3s
         const breathFadeIn=Math.min(1,(elapsed-BREATH_START)/3000);
-        const calmT=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/12000));
+        const calmT=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/3000));
         const period=(4000+(ts%2000)) + calmT*(9000+(ts%2000));
         const phase=(ts%1000)/1000;
         const t=((elapsed/period+phase)%1);
@@ -336,7 +336,7 @@ function drawFrame(now){
     } else if(tok.isRuido){
       const ph=_ruidoPhases[tok.phaseIdx];
       // periodo dinámico: rápido en parte densa (×0.4), lento al calmarse (×1)
-      const calmR=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/10000));
+      const calmR=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/3000));
       const dynPeriod=ph.period*(0.35+calmR*0.65);
       const cycle=(elapsed/dynPeriod+ph.phase)%1;
       let op;
@@ -344,9 +344,7 @@ function drawFrame(now){
       else if(cycle<0.6) op=1;
       else op=(1-cycle)/0.4;
 
-      // ruido: empieza brillante, se apaga después de RUIDO_BRIGHT_MS
-      // ruido se apaga lento después de la parte densa — transición a calma
-      const introT=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/12000));
+      const introT=Math.max(0,Math.min(1,(elapsed-LETRAS_END)/3000));
       const introEase=introT<0.5?4*introT*introT*introT:1-Math.pow(-2*introT+2,3)/2;
       const finalOp=op*(0.10+(1-introEase)*0.74);
 
