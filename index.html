@@ -308,36 +308,13 @@ function drawFrame(now){
       // tempo global — mismo que el ruido, es el metrónomo de todo
       const masterT=MASTER_PERIOD*(0.35+calmT*0.65);
 
-      // ── RESPIRACIÓN letras amarillas — curva seno suave, mismo tempo que ruido
-      let breathScale=1, breathOp=1;
-      if(e.href && delays.some(d=>elapsed>=d)){
-        const ts=tokenSeed(Math.round(tok.x), Math.round(tok.y));
-        const phase=(ts%1000)/1000;
-        // sin² da expansión/contracción continua sin esquinas — como un pulmón
-        const angle=((elapsed/masterT)+phase)*Math.PI*2;
-        const raw=(Math.sin(angle)*0.5+0.5); // 0..1 suave
-        // micro-irregularidad: segundo armónico muy sutil para no parecer metrónomo
-        const raw2=(Math.sin(angle*1.618+1.2)*0.5+0.5);
-        const breath=raw*0.75+raw2*0.25;
-        const breathAmp=Math.pow(calmT,3);
-        breathScale=1+breath*0.45*breathAmp;
-        breathOp=1-(1-breath)*0.3*breathAmp;
-      }
-
       // hover: shadowBlur para grosor sin cambiar tamaño
       if(isHover){
         ctx.shadowColor=e.color==='#ffee00'?'rgba(255,238,0,.9)':'rgba(255,255,255,.9)';
         ctx.shadowBlur=6;
       }
 
-      // ── DIBUJAR LETRAS — mismo ciclo triangular que el ruido ────────
-      const centerX=drawX+tok.tw/2;
-      if(e.href && breathScale!==1){
-        ctx.save();
-        ctx.translate(centerX, tok.y);
-        ctx.scale(breathScale, breathScale);
-        ctx.translate(-centerX, -tok.y);
-      }
+      // ── DIBUJAR LETRAS ───────────────────────────────────────────────
       let cx=drawX;
       for(let li=0;li<word.length;li++){
         const ch=word[li];
@@ -348,16 +325,27 @@ function drawFrame(now){
           const lraw=(Math.sin(langle)*0.5+0.5);
           const lraw2=(Math.sin(langle*1.618+1.2)*0.5+0.5);
           const lpulso=lraw*0.75+lraw2*0.25;
-          // en calma el pulso se aplana a 1 — letras se estabilizan
+          // en calma el pulso se aplana a 1 — letras blancas se estabilizan
           const pulso=lpulso*(1-calmT)+calmT;
-          const finalOp=e.href ? breathOp : pulso*0.92;
-          if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${e.href?breathOp:pulso})`;
-          else ctx.fillStyle=`rgba(255,255,255,${finalOp})`;
+
+          if(e.href){
+            // amarillas: sin escala, solo pulso de opacidad entre tono bajo y alto
+            // el rango se abre conforme llega la calma (breathAmp)
+            const breathAmp=Math.pow(calmT,3);
+            const lo=1-0.55*breathAmp; // tono bajo: de 1 baja hasta 0.45
+            const hi=1;                // tono alto: siempre 1
+            const linkOp=lo+(hi-lo)*lpulso;
+            ctx.fillStyle=`rgba(255,238,0,${linkOp})`;
+          } else {
+            const finalOp=e.color==='#ffee00' ? pulso : pulso*0.92;
+            ctx.fillStyle=e.color==='#ffee00'
+              ? `rgba(255,238,0,${finalOp})`
+              : `rgba(255,255,255,${finalOp})`;
+          }
           ctx.fillText(ch, cx, tok.y);
         }
         cx+=cw;
       }
-      if(e.href && breathScale!==1) ctx.restore();
       ctx.shadowBlur=0;
       ctx.font=`italic ${tFS}px Georgia,serif`;
 
