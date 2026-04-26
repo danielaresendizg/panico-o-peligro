@@ -48,13 +48,16 @@ function rnd(){ return ruido[Math.floor(seededRnd()*ruido.length)]; }
 let _ruidoPhases=[];
 
 // Font size adaptado: en mobile más pequeño para que quepan más tokens por fila
+// start/end = fracción del flujo donde se insertan los grupos de datos
+// En pantallas anchas (landscape/desktop) hay más tokens por fila → grupos más dispersos
+// → usar rangos más estrechos para mantenerlos juntos y en la zona media
 const BREAKPOINTS=[
-  {name:'mobile-v',  w:390,  h:844,  fs:11},
-  {name:'mobile-h',  w:844,  h:390,  fs:11},
-  {name:'tablet-v',  w:768,  h:1024, fs:14},
-  {name:'tablet-h',  w:1024, h:768,  fs:14},
-  {name:'laptop',    w:1440, h:900,  fs:20},
-  {name:'desktop',   w:1920, h:1080, fs:24},
+  {name:'mobile-v',  w:390,  h:844,  fs:11, start:.24, end:.50},
+  {name:'mobile-h',  w:844,  h:390,  fs:11, start:.30, end:.55},
+  {name:'tablet-v',  w:768,  h:1024, fs:14, start:.30, end:.52},
+  {name:'tablet-h',  w:1024, h:768,  fs:14, start:.30, end:.54},
+  {name:'laptop',    w:1440, h:900,  fs:20, start:.32, end:.54},
+  {name:'desktop',   w:1920, h:1080, fs:24, start:.33, end:.53},
 ];
 
 function getBreakpoint(){
@@ -119,7 +122,7 @@ function buildLayout(){
 
   // Distribuir grupos en franja 25%–65% del total de tokens
   // así siempre caben en pantalla independientemente del tamaño
-  const startPos=0.22, endPos=0.60;
+  const {start:startPos, end:endPos}=getBreakpoint();
   const step=(endPos-startPos)/(NUM_GRUPOS-1);
   const eventos=eventosDef.map(e=>({...e, pos:startPos+e.grupo*step}));
   const evSorted=[...eventos].sort((a,b)=>a.pos-b.pos);
