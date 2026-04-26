@@ -90,28 +90,30 @@ function tokenSeed(x,y){ return (x*73856093^y*19349663)&0x7fffffff; }
 
 const eventosDef=[
   // grupo 0: título
-  {t:'Pánico.',    grupo:0, color:BLANCO},
-  {t:'Peligro.',   grupo:0, color:BLANCO},
-  // grupo 1: autora + lugar (misma ventana, intercalados)
-  {t:'María.',     grupo:1, color:BLANCO},
-  {t:'Luisa.',     grupo:1, color:BLANCO},
-  {t:'Puga.',      grupo:1, color:BLANCO},
-  {t:'Centro.',    grupo:1, color:BLANCO},
-  {t:'Cultural.',  grupo:1, color:BLANCO},
-  {t:'España.',    grupo:1, color:BLANCO},
-  // grupo 2: fecha
-  {t:'25.06.2026.',grupo:2, color:BLANCO},
-  // grupo 3: artistas
-  {t:'Daniela.',   grupo:3, color:BLANCO, hoverable:true},
-  {t:'Reséndiz.',  grupo:3, color:BLANCO, hoverable:true},
-  {t:'Brenda.',    grupo:3, color:BLANCO, hoverable:true},
-  {t:'Isabel.',    grupo:3, color:BLANCO, hoverable:true},
-  {t:'Pérez.',     grupo:3, color:BLANCO, hoverable:true},
-  // grupo 4: links
-  {t:'cartografía.',grupo:4, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
-  {t:'redes.',      grupo:4, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
+  {t:'Pánico.',      grupo:0, color:BLANCO},
+  {t:'Peligro.',     grupo:0, color:BLANCO},
+  // grupo 1: autora del libro
+  {t:'María.',       grupo:1, color:BLANCO},
+  {t:'Luisa.',       grupo:1, color:BLANCO},
+  {t:'Puga.',        grupo:1, color:BLANCO},
+  // grupo 2: lugar
+  {t:'Centro.',      grupo:2, color:BLANCO},
+  {t:'Cultural.',    grupo:2, color:BLANCO},
+  {t:'España.',      grupo:2, color:BLANCO},
+  // grupo 3: fecha + ciudad
+  {t:'25.06.2026.',  grupo:3, color:BLANCO},
+  {t:'México.',      grupo:3, color:BLANCO},
+  // grupo 4: artistas
+  {t:'Daniela.',     grupo:4, color:BLANCO, hoverable:true},
+  {t:'Reséndiz.',    grupo:4, color:BLANCO, hoverable:true},
+  {t:'Brenda.',      grupo:4, color:BLANCO, hoverable:true},
+  {t:'Isabel.',      grupo:4, color:BLANCO, hoverable:true},
+  {t:'Pérez.',       grupo:4, color:BLANCO, hoverable:true},
+  // grupo 5: links
+  {t:'cartografía.', grupo:5, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
+  {t:'redes.',       grupo:5, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
 ];
-const NUM_GRUPOS=5;
+const NUM_GRUPOS=6;
 
 // Letras normales: distribuidas en todo el arco caos→calma (1s–13s)
 // Links: siempre al final, cuando ya hay calma
