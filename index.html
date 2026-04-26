@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pánico o Peligro — Cartografía de la inhabilitación</title>
+<script src="https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.css" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#000005;
+  --lava:    #ffffff;   /* naranja lava — flujo principal     */
+  --lava2:   #ffffff;   /* naranja claro — partículas         */
+  --electro: rgba(255,255,255,.9);   /* secciones */
+  --plasma:  #ffffff;   /* morado plasma                      */
+  --neon:    #ff0066;   /* rosa neón — peligro                */
+  --lime:    #39ff14;   /* verde neón                         */
+  --blanco:  #f5f5f5;
+  --muted:   rgba(255,255,255,.35);
+  --line:    #0d0d14;
+  --panel:   rgba(0,0,5,0.96);
+  --sans:    "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-family:var(--sans)}
+#map{position:fixed;inset:0}
+
+/* ── CANVAS PARTÍCULAS ── */
+#particles-canvas{position:fixed;inset:0;pointer-events:none;z-index:1}
+
+/* ── PANEL ── */
+#panel{
+  position:fixed;top:0;left:0;height:100%;width:420px;
+  background:var(--panel);
+  border-right:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;z-index:10;
+  backdrop-filter:blur(12px);
+}
+
+/* ── CABECERA ── */
+.p-head{padding:24px 22px 16px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0}
+.p-eyebrow{
+  font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px;
+  color:var(--electro);
+}
+.p-titulo{
+  font-size:1.5rem;font-style:italic;font-family:Georgia,"Times New Roman",serif;
+  color:var(--blanco);line-height:1.2;margin-bottom:8px;
+}
+.p-autor{font-size:.68rem;color:var(--muted);line-height:1.6}
+.p-autor em{color:var(--lava);font-style:normal}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0}
+.tab{flex:1;padding:10px 2px;text-align:center;font-size:.62rem;color:var(--muted);
+  cursor:pointer;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+  border-bottom:2px solid transparent;transition:all 200ms}
+.tab:hover{color:var(--blanco)}
+.tab.active{color:var(--lava);border-bottom-color:var(--lava)}
+
+/* ── TAB CONTENT ── */
+.tab-c{display:none;flex:1;overflow-y:auto;flex-direction:column;min-height:0}
+.tab-c.active{display:flex}
+.tab-c::-webkit-scrollbar{width:2px}
+.tab-c::-webkit-scrollbar-thumb{background:rgba(0,212,255,.2)}
+
+/* ── MOMENTOS ── */
+.momento{
+  padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.03);
+  cursor:pointer;transition:all 180ms;border-left:2px solid transparent;
+}
+.momento:hover{background:rgba(255,255,255,.04)}
+.momento.active{
+  background:rgba(255,255,255,.07);border-left-color:var(--lava);
+  box-shadow:inset 0 0 20px rgba(255,255,255,.05);
+}
+.momento.active .m-n{color:var(--lava)}
+.momento.active .m-t{color:#fff}
+.m-n{font-size:.55rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:3px;font-weight:700}
+.m-t{font-size:.82rem;font-weight:700;color:var(--blanco);line-height:1.3;letter-spacing:-.01em}
+.m-d{font-size:.69rem;color:var(--muted);line-height:1.55;display:none;margin-top:5px}
+.momento.active .m-d{display:block}
+
+/* ── GRUPOS CAPAS ── */
+.lg{border-bottom:1px solid rgba(255,255,255,.03)}
+.lg-h{
+  padding:9px 18px;font-size:.66rem;font-weight:700;color:var(--blanco);
+  cursor:pointer;display:flex;align-items:center;justify-content:space-between;
+  letter-spacing:.06em;text-transform:uppercase;transition:background 150ms;
+}
+.lg-h:hover{background:rgba(255,255,255,.02)}
+.lg-arr{font-size:.5rem;color:var(--muted);transition:transform 200ms}
+.lg.abierto .lg-arr{transform:rotate(90deg)}
+.lg-items{display:none;padding:2px 0 6px}
+.lg.abierto .lg-items{display:block}
+.li{
+  padding:6px 18px 6px 32px;cursor:pointer;font-size:.7rem;color:var(--muted);
+  display:flex;align-items:flex-start;gap:8px;transition:all 150ms;
+}
+.li:hover{background:rgba(255,255,255,.02);color:var(--blanco)}
+.li.active{color:var(--lava)}
+.li.active .li-d{background:var(--lava)}
+.li-d{
+  width:6px;height:6px;border-radius:50%;background:#1a1a22;
+  flex-shrink:0;margin-top:5px;transition:all 200ms;
+}
+.li-tag{font-size:.6rem;color:var(--muted);display:block;margin-top:1px}
+
+/* ── LEYENDA ── */
+#leyenda{padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.03);display:none}
+.ley-t{
+  font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;font-weight:700;
+  color:var(--electro);
+}
+.ley-items{display:flex;flex-direction:column;gap:4px}
+.ley-i{display:flex;align-items:center;gap:8px;font-size:.69rem;color:var(--blanco)}
+.ley-linea{width:22px;height:3px;border-radius:2px;flex-shrink:0}
+.ley-circ{border-radius:50%;flex-shrink:0}
+.ley-cuad{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ── PERSONAJES ── */
+.pers-f{padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0}
+.pers-f label{
+  font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:8px;font-weight:700;
+  color:var(--electro);
+}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{
+  padding:3px 8px;border-radius:10px;font-size:.63rem;cursor:pointer;
+  border:1px solid transparent;transition:all 200ms;color:#fff;opacity:.35;font-weight:700;
+  font-family:var(--sans);
+}
+.chip:hover{opacity:.6;transform:scale(1.08)}
+.chip.active{opacity:1;border-color:rgba(255,255,255,.25);box-shadow:0 0 12px currentColor}
+.chip-todos{background:#0d0d14;color:var(--blanco)}
+.pers-res{padding:14px 18px;flex:1;overflow-y:auto}
+.pers-res::-webkit-scrollbar{width:2px}
+.pers-res::-webkit-scrollbar-thumb{background:rgba(0,212,255,.2)}
+.pr-nom{font-size:.9rem;font-weight:700;margin-bottom:7px;letter-spacing:-.01em}
+.pr-stat{font-size:.69rem;color:var(--blanco);margin-bottom:2px}
+.pr-stat span{color:var(--muted)}
+.pr-sec{
+  font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;margin-top:10px;margin-bottom:3px;font-weight:700;
+  color:var(--electro);
+}
+.pr-lista{font-size:.68rem;color:var(--muted);line-height:1.6}
+.pr-cita{font-style:italic;font-size:.71rem;line-height:1.6;border-left:2px solid;padding-left:9px;margin-top:10px}
+
+/* ── RECORRIDOS LISTA ── */
+.rec-item{
+  border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer;transition:background 150ms;
+}
+.rec-item:hover{background:rgba(255,255,255,.05)}
+.rec-item.active{background:rgba(255,255,255,.08);border-left:3px solid var(--lava)}
+.rec-item:not(.active){border-left:3px solid transparent}
+.rec-head{padding:12px 22px;display:flex;align-items:center;gap:12px}
+.rec-num{font-size:.58rem;color:var(--muted);font-weight:700;letter-spacing:.12em;width:20px;flex-shrink:0}
+.rec-nombre{font-size:.78rem;font-weight:700;color:var(--blanco);line-height:1.25;flex:1}
+.rec-etapa{font-size:.6rem;color:var(--muted);margin-top:2px}
+.rec-arr{font-size:.5rem;color:var(--muted);transition:transform 200ms;flex-shrink:0}
+.rec-item.active .rec-arr{transform:rotate(90deg)}
+.rec-wps{display:none;padding:0 0 10px 0}
+.rec-item.active .rec-wps{display:block}
+.rec-wp{
+  padding:7px 22px 7px 54px;display:flex;align-items:flex-start;gap:10px;
+  font-size:.69rem;color:var(--muted);cursor:pointer;transition:background 150ms;
+}
+.rec-wp:hover{background:rgba(255,255,255,.02);color:var(--blanco)}
+.rec-wp-n{
+  width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;
+  font-size:.58rem;font-weight:700;color:var(--lava);flex-shrink:0;
+}
+.rec-wp-info{}
+.rec-wp-lugar{color:var(--blanco);font-size:.71rem;font-weight:600}
+.rec-wp-tipo{font-size:.6rem;color:var(--muted);margin-top:1px}
+.rec-wp-cita{font-style:italic;font-size:.65rem;color:var(--muted);line-height:1.5;margin-top:3px;
+  border-left:1px solid rgba(255,255,255,.3);padding-left:6px}
+
+/* ── PERSONAJES LISTA VERTICAL ── */
+.pers-item{
+  padding:14px 22px;border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer;display:flex;align-items:center;gap:14px;transition:background 150ms;
+}
+.pers-item:hover{background:rgba(255,255,255,.02)}
+.pers-item.active{background:rgba(255,255,255,.04);border-left:3px solid currentColor}
+.pers-item:not(.active){border-left:3px solid transparent}
+.pers-pt-wrap{position:relative;flex-shrink:0}
+.pers-pt-aura{border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:.2}
+.pers-pt-core{border-radius:50%;background:#fff;position:relative;z-index:1}
+.pers-nombre{font-size:.85rem;font-weight:700;color:var(--blanco)}
+.pers-menciones{font-size:.63rem;color:var(--muted);margin-top:2px}
+
+/* ── GRADIENTE ── */
+.grad-w{padding:14px 18px}
+.grad-intro{font-size:.7rem;color:var(--muted);line-height:1.6;margin-bottom:13px}
+.grad-niv{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px;padding:5px 7px;border-radius:3px;transition:background 150ms}
+.grad-niv:hover{background:rgba(255,255,255,.02)}
+.grad-bar{width:4px;border-radius:3px;flex-shrink:0;margin-top:3px}
+.grad-nom{font-size:.72rem;font-weight:700;margin-bottom:2px;letter-spacing:-.01em}
+.grad-desc{font-size:.64rem;color:var(--muted);line-height:1.45;margin-bottom:2px}
+.grad-esp{font-size:.61rem;color:#1e1e2a}
+
+/* ── BTN GRAFOS ── */
+.btn-g-wrap{padding:10px 18px;border-top:1px solid rgba(255,255,255,.03);flex-shrink:0}
+.btn-g{
+  padding:9px 12px;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.2);border-radius:2px;
+  font-size:.67rem;color:var(--plasma);cursor:pointer;text-align:center;
+  font-weight:700;letter-spacing:.07em;transition:all 180ms;font-family:var(--sans);
+}
+.btn-g:hover{background:rgba(255,255,255,.14);}
+
+#chip-entrada{
+  padding:14px 20px;border-top:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+#chip-entrada a{
+  font-family:Georgia,"Times New Roman",serif;font-style:italic;font-size:.85rem;
+  color:rgba(255,255,255,.55);text-decoration:none;
+  border:1px solid rgba(255,255,255,.15);
+  padding:7px 18px;border-radius:20px;
+  transition:all 200ms;letter-spacing:.02em;
+}
+#chip-entrada a:hover{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.04)}
+
+/* ── INFO ── */
+#info{
+  padding:12px 18px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.03);
+  font-size:.7rem;color:var(--muted);line-height:1.6;min-height:76px;max-height:170px;overflow-y:auto;
+}
+#info .i-t{font-size:.84rem;font-weight:700;color:var(--blanco);margin-bottom:3px;letter-spacing:-.01em}
+#info .i-m{font-size:.64rem;color:var(--muted);margin-bottom:4px}
+#info .i-cita{font-style:italic;border-left:2px solid;padding-left:8px;margin-top:6px;font-size:.7rem;line-height:1.6}
+
+/* ── TOOLTIP EN MAPA ── */
+#mapa-tt{
+  position:fixed;display:none;max-width:290px;
+  background:rgba(0,0,5,.97);
+  border-left:3px solid var(--lava);
+  padding:11px 14px;z-index:30;pointer-events:none;
+  backdrop-filter:blur(10px);
+  box-shadow:0 0 30px rgba(255,255,255,.15);
+}
+#mapa-tt .tt-l{font-size:.8rem;font-weight:700;color:#fff;margin-bottom:4px}
+#mapa-tt .tt-c{font-style:italic;font-size:.72rem;color:var(--blanco);line-height:1.6}
+#mapa-tt .tt-m{font-size:.61rem;color:var(--muted);margin-top:4px}
+
+/* ── CITA FLOTANTE ── */
+#cita-f{
+  position:fixed;bottom:26px;left:436px;right:14px;max-width:620px;
+  background:rgba(0,0,5,.92);border-left:3px solid var(--lava);
+  padding:11px 15px;font-style:italic;font-size:.82rem;color:var(--lava);
+  line-height:1.6;z-index:20;backdrop-filter:blur(8px);
+  pointer-events:none;transition:opacity 350ms;
+  text-shadow:0 0 10px rgba(255,255,255,.5);
+  box-shadow:0 0 30px rgba(255,255,255,.1);
+}
+#cita-f.oculta{opacity:0}
+
+/* ── STATS ── */
+#stats{
+  position:fixed;top:12px;right:12px;background:rgba(0,0,5,.92);
+  border:1px solid rgba(0,212,255,.2);padding:9px 12px;z-index:20;
+  font-size:.67rem;color:var(--muted);line-height:1.9;backdrop-filter:blur(6px);display:none;
+  box-shadow:0 0 16px rgba(0,212,255,.08);
+}
+#stats b{color:var(--electro)}
+
+/* ── CARGA ── */
+#carga{
+  position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:100;gap:16px;
+}
+#carga.oculto{display:none}
+.spinner{
+  width:36px;height:36px;border:2px solid #0d0d14;
+  border-top-color:var(--lava);border-right-color:var(--electro);
+  border-radius:50%;animation:giro .7s linear infinite;
+}
+@keyframes giro{to{transform:rotate(360deg)}}
+#carga p{font-size:.72rem;color:var(--muted);font-family:var(--sans);letter-spacing:.1em}
+
+/* ── INTRO ── */
+#intro{
+  position:fixed;inset:0;z-index:200;background:#000008;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity 600ms;
+}
+#intro.oculto{opacity:0;pointer-events:none}
+#intro canvas{position:absolute;inset:0;width:100%;height:100%}
+#intro-box{
+  position:relative;z-index:1;
+  max-width:520px;padding:0 32px;
+  display:flex;flex-direction:column;gap:28px;
+}
+#intro-box h2{
+  font-family:Georgia,"Times New Roman",serif;font-style:italic;
+  font-size:1.6rem;color:#fff;line-height:1.25;
+}
+#intro-box .bloque{
+  font-family:Georgia,"Times New Roman",serif;font-style:italic;
+  font-size:.82rem;color:rgba(255,255,255,.72);line-height:1.8;
+}
+#intro-box .bloque strong{color:rgba(255,255,255,.92);font-weight:normal}
+#intro-box .sep{
+  width:32px;height:1px;background:rgba(255,255,255,.2);
+}
+#intro-entrar{
+  align-self:flex-start;
+  font-family:Georgia,"Times New Roman",serif;font-style:italic;
+  font-size:.9rem;color:rgba(255,255,255,.6);
+  border:1px solid rgba(255,255,255,.2);
+  padding:9px 24px;border-radius:20px;cursor:pointer;
+  background:none;transition:all 220ms;letter-spacing:.03em;
+}
+#intro-entrar:hover{color:#fff;border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.05)}
+</style>
+</head>
+<body>
+
+<div id="intro">
+  <canvas id="intro-bg"></canvas>
+  <div id="intro-box">
+    <h2>Pánico o Peligro.</h2>
+    <div class="bloque">
+      <strong>Pánico o peligro</strong> (1983) es una novela de María Luisa Puga sobre Susana, una mujer en la Ciudad de México de los años setenta. El espacio no es decorado: es el mecanismo que regula qué puede hacer un cuerpo, dónde puede estar, cómo debe moverse. La pregunta central de la novela —y de esta cartografía— es si lo que siente Susana es pánico propio o peligro real.
+    </div>
+    <div class="sep"></div>
+    <div class="bloque">
+      <strong>Metodología.</strong> Cada aparición de un personaje en un espacio fue registrada como un vínculo. Los espacios se clasificaron en una escala de intimidad (0 = cuerpo / íntimo → 9 = transporte móvil) construida a partir de la propia lógica espacial del texto. Las menciones son frecuencia narrativa, no duración. Lo que no aparece en el mapa también es dato.
+    </div>
+    <button id="intro-entrar" onclick="cerrarIntro()">Entrar.</button>
+  </div>
+</div>
+<div id="carga"><div class="spinner"></div><p id="ctxt">Inicializando...</p></div>
+<canvas id="particles-canvas"></canvas>
+<div id="map"></div>
+
+<div id="panel">
+  <div class="p-head">
+    <div class="p-eyebrow">Ciudad de México · Años 70 — 2026</div>
+    <h1 class="p-titulo">Pánico o Peligro.</h1>
+    <div class="p-autor">
+      A partir de <em>Pánico o peligro</em>, María Luisa Puga (1983)<br>
+      Cartografía: Daniela Reséndiz García
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active"  onclick="abrirTab('capas')">Capas</div>
+    <div class="tab"         onclick="abrirTab('recorridos')">Recorridos</div>
+    <div class="tab"         onclick="abrirTab('personajes')">Personajes</div>
+    <div class="tab"         onclick="abrirTab('gradiente')">Gradiente</div>
+  </div>
+
+  <div class="tab-c" id="tab-capas">
+    <div class="lg abierto" id="lg-syntax">
+      <div class="lg-h" onclick="toggleGrupo('lg-syntax')"><span>Space Syntax — Red vial</span><span class="lg-arr">▶</span></div>
+      <div class="lg-items">
+        <div class="li active" data-layer="NACHr500m" onclick="selRedLayer('NACHr500m')"><div class="li-d"></div><div>Elección NACH 500m<span class="li-tag">Flujo peatonal local</span></div></div>
+        <div class="li" data-layer="NACHr1500m" onclick="selRedLayer('NACHr1500m')"><div class="li-d"></div><div>Elección NACH 1500m<span class="li-tag">Flujo peatonal medio</span></div></div>
+        <div class="li" data-layer="NACHr5000m" onclick="selRedLayer('NACHr5000m')"><div class="li-d"></div><div>Elección NACH 5km<span class="li-tag">Flujo a escala ciudad</span></div></div>
+        <div class="li" data-layer="NAINr500m" onclick="selRedLayer('NAINr500m')"><div class="li-d"></div><div>Integración NAIN 500m<span class="li-tag">Accesibilidad peatonal local</span></div></div>
+        <div class="li" data-layer="NAINr1500m" onclick="selRedLayer('NAINr1500m')"><div class="li-d"></div><div>Integración NAIN 1500m<span class="li-tag">Accesibilidad peatonal media</span></div></div>
+        <div class="li" data-layer="NAINr5000m" onclick="selRedLayer('NAINr5000m')"><div class="li-d"></div><div>Integración NAIN 5km<span class="li-tag">Accesibilidad a escala ciudad</span></div></div>
+      </div>
+    </div>
+    <div class="lg" id="lg-rec">
+      <div class="lg-h" onclick="toggleGrupo('lg-rec')"><span>Recorridos</span><span class="lg-arr">▶</span></div>
+      <div class="lg-items">
+        <div class="li" data-layer="recorridos" onclick="toggleOverlay('recorridos')"><div class="li-d"></div><div>16 recorridos — flujo lava<span class="li-tag">Líneas animadas con partículas</span></div></div>
+        <div class="li" data-layer="waypoints" onclick="toggleOverlay('waypoints')"><div class="li-d"></div><div>Waypoints con citas<span class="li-tag">Puntos pulsantes numerados</span></div></div>
+      </div>
+    </div>
+    <div class="lg" id="lg-esp">
+      <div class="lg-h" onclick="toggleGrupo('lg-esp')"><span>Espacios de la novela</span><span class="lg-arr">▶</span></div>
+      <div class="lg-items">
+        <div class="li" data-layer="espacios" onclick="toggleOverlay('espacios')"><div class="li-d"></div><div>140 lugares — escala mundial<span class="li-tag">Esferas de plasma · tamaño = menciones</span></div></div>
+      </div>
+    </div>
+    <div class="lg" id="lg-fem">
+      <div class="lg-h" onclick="toggleGrupo('lg-fem')"><span>Feminicidios 2019–2026</span><span class="lg-arr">▶</span></div>
+      <div class="lg-items">
+        <div class="li" data-layer="feminicidios" onclick="toggleOverlay('feminicidios')"><div class="li-d"></div><div>490 registros FGJCDMX<span class="li-tag">Por tipo de espacio</span></div></div>
+      </div>
+    </div>
+    <div id="leyenda"></div>
+  </div>
+
+  <!-- RECORRIDOS -->
+  <div class="tab-c" id="tab-recorridos">
+    <div id="lista-recorridos" style="padding:0"></div>
+  </div>
+
+  <!-- PERSONAJES -->
+  <div class="tab-c" id="tab-personajes">
+    <div id="lista-personajes" style="padding:0"></div>
+    <div class="pers-res" id="pers-res">
+      <div style="color:var(--muted);font-size:.7rem;padding:14px 22px">Selecciona un personaje para ver su lógica espacial.</div>
+    </div>
+  </div>
+
+  <div class="tab-c" id="tab-gradiente">
+    <div class="grad-w">
+      <div style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:8px;letter-spacing:-.01em">Gradiente de profundidad espacial</div>
+      <div class="grad-intro">Del espacio más íntimo (0) al más abierto (10). El nivel 3 — <strong style="color:#ffffff;text-shadow:0 0 10px #ffffff">la ventana</strong> — es el umbral bisagra de toda la novela.</div>
+      <div id="grad-niveles"></div>
+    </div>
+  </div>
+
+  <div class="btn-g-wrap">
+    <div class="btn-g" onclick="window.open('grafos.html','_blank')">Ver análisis de redes de personajes →</div>
+  </div>
+  <div id="info"><div style="color:var(--muted);font-size:.7rem">Pasa el cursor o haz clic en el mapa.</div></div>
+  <div id="chip-entrada"><a href="entrada.html">Pánico o Peligro.</a></div>
+</div>
+
+<div id="mapa-tt"><div class="tt-l" id="tt-l"></div><div class="tt-c" id="tt-c"></div><div class="tt-m" id="tt-m"></div></div>
+<div id="cita-f" class="oculta"></div>
+<div id="stats"></div>
+
+<script>
+// ── COLORES ──────────────────────────────────────────────────────────────────
+const C={lava:'#ffffff',lava2:'#ffffff',electro:'#00d4ff',plasma:'#ffffff',neon:'#ff0066',lime:'#39ff14'};
+
+// Space Syntax — paleta clásica saturada (azul→cian→verde→amarillo→rojo)
+const SS_RAMP=['#0000ff','#00ffff','#00ff00','#ffff00','#ff0000'];
+const SS_DOM={
+  NAINr500m:[1.03,1.21,1.38,1.55,2.03],NAINr1500m:[1.05,1.13,1.25,1.41,2.01],
+  NAINr5000m:[0.78,1.01,1.17,1.32,1.84],NACHr500m:[0.51,0.92,1.07,1.17,1.34],
+  NACHr1500m:[0.64,0.97,1.10,1.20,1.36],NACHr5000m:[0.58,0.92,1.04,1.14,1.37],
+};
+const SS_FIELD={NAINr500m:'n0',NAINr1500m:'n1',NAINr5000m:'n2',NACHr500m:'c0',NACHr1500m:'c1',NACHr5000m:'c2'};
+const SS_LAB={NAINr500m:'NAIN 500m',NAINr1500m:'NAIN 1500m',NAINr5000m:'NAIN 5km',NACHr500m:'NACH 500m',NACHr1500m:'NACH 1500m',NACHr5000m:'NACH 5km'};
+
+// Personajes — colores plasma individuales
+const PERS_COLOR={
+  'Susana (narradora)':'#ffffff','Lourdes':'#00d4ff','Socorro':'#ff0066',
+  'Lola':'#ffffff','Arturo':'#ffff00','Ramiro':'#ffffff','Claude':'#00ff88',
+  'Mateo':'#00ffff','Padre de Susana':'#ffffff','Madre de Susana':'#ffffff',
+  'María Laura':'#39ff14','Fermín':'#ffffff','González':'#0088ff',
+};
+
+// Feminicidios — plasma por espacio
+const ESP_COLOR={
+  'Espacio cerrado doméstico':'#ff0066',
+  'Espacio abierto público':'#00d4ff',
+  'Espacio cerrado no doméstico':'#ffffff',
+  'Espacio abierto privado':'#39ff14',
+  'Indeterminado':'#222',
+};
+
+// ── PARTÍCULAS ───────────────────────────────────────────────────────────────
+const pCanvas=document.getElementById('particles-canvas');
+const pCtx=pCanvas.getContext('2d');
+let particles=[];
+
+function resizeCanvas(){pCanvas.width=window.innerWidth;pCanvas.height=window.innerHeight;}
+resizeCanvas();
+window.addEventListener('resize',resizeCanvas);
+
+class Particle{
+  constructor(){this.reset();}
+  reset(){
+    this.x=Math.random()*pCanvas.width;
+    this.y=Math.random()*pCanvas.height;
+    this.size=Math.random()*1.5+.3;
+    this.speedX=(Math.random()-.5)*.4;
+    this.speedY=(Math.random()-.5)*.4;
+    this.life=Math.random();
+    this.maxLife=Math.random()*.02+.003;
+    const colors=['rgba(255,255,255,','rgba(0,212,255,','rgba(255,255,255,','rgba(0,212,255,'];
+    this.color=colors[Math.floor(Math.random()*colors.length)];
+    this.opacity=0;
+  }
+  update(){
+    this.x+=this.speedX;this.y+=this.speedY;
+    this.life+=this.maxLife;
+    this.opacity=this.life<.5?this.life*2:(1-this.life)*2;
+    if(this.life>=1) this.reset();
+  }
+  draw(){
+    pCtx.beginPath();
+    pCtx.arc(this.x,this.y,this.size,0,Math.PI*2);
+    pCtx.fillStyle=this.color+this.opacity*.15+')';
+    pCtx.fill();
+  }
+}
+
+for(let i=0;i<80;i++) particles.push(new Particle());
+
+function animParticles(){
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+  particles.forEach(p=>{p.update();p.draw();});
+  requestAnimationFrame(animParticles);
+}
+animParticles();
+
+// ── ESTADO ───────────────────────────────────────────────────────────────────
+let activeRedLayer='NACHr500m',activeOverlays=new Set(),activePersonaje='todos',DATA={};
+let flowAnimFrame=null,flowOffset=0;
+
+// ── MAPA — basemap negro total ────────────────────────────────────────────────
+// estilo personalizado negro puro
+const DARK_STYLE={
+  version:8,
+  sources:{
+    carto:{type:'raster',
+      tiles:['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+             'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
+      tileSize:256,attribution:'© CARTO © OpenStreetMap'}
+  },
+  layers:[
+    {id:'background',type:'background',paint:{'background-color':'#0000ff'}},
+    {id:'carto-tiles',type:'raster',source:'carto',paint:{
+      'raster-opacity':.88,
+      'raster-brightness-min':0,
+      'raster-brightness-max':.75,
+    }},
+  ]
+};
+
+const map=new maplibregl.Map({
+  container:'map',style:DARK_STYLE,
+  center:[-99.163,19.415],zoom:13.5,maxZoom:18,minZoom:2,
+});
+map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
+
+// ── CARGA ────────────────────────────────────────────────────────────────────
+map.on('load',async()=>{
+  document.getElementById('ctxt').textContent='Cargando capas...';
+  try{
+    const archivos={
+      network:'data/network_cdmx.geojson',recorridos:'data/rutas_lineas.geojson',
+      waypoints:'data/waypoints_citas.geojson',feminicidios:'data/feminicidios_all.geojson',
+      espacios:'data/espacios_mundiales.geojson',personajes:'data/personajes_lugares.geojson',
+      resumen:'data/personajes_resumen.json',gradiente:'data/gradiente_profundidad.json',
+    };
+    await Promise.all(Object.entries(archivos).map(async([k,u])=>{const r=await fetch(u);DATA[k]=await r.json();}));
+    agregarFuentes();agregarCapas();agregarInteracciones();
+    construirChips();construirGradiente();construirRecorridos();
+    document.getElementById('carga').classList.add('oculto');
+    // activar Space Syntax por defecto
+    selRedLayer('NACHr500m');
+  }catch(e){document.getElementById('ctxt').textContent='Error: '+e.message;console.error(e);}
+});
+
+function agregarFuentes(){
+  ['network','recorridos','waypoints','feminicidios','espacios','personajes'].forEach(k=>{
+    map.addSource(k,{type:'geojson',data:DATA[k]});
+  });
+}
+
+function ssExpr(f){
+  const d=SS_DOM[f],p=SS_FIELD[f];
+  return['interpolate',['linear'],['get',p],d[0],SS_RAMP[0],d[1],SS_RAMP[1],d[2],SS_RAMP[2],d[3],SS_RAMP[3],d[4],SS_RAMP[4]];
+}
+function persExpr(){return['match',['get','personaje'],...Object.entries(PERS_COLOR).flat(),'#444'];}
+function femExpr(){return['match',['get','tipo_espacio'],...Object.entries(ESP_COLOR).flat(),'#222'];}
+
+function agregarCapas(){
+  // ── RED VIAL — muy delgada, colores saturados syntax ──
+  map.addLayer({id:'network-layer',type:'line',source:'network',
+    layout:{'line-join':'round','line-cap':'round'},
+    paint:{
+      'line-width':['interpolate',['linear'],['zoom'],9,.3,13,.9,16,2],
+      'line-color':ssExpr(activeRedLayer),
+      'line-opacity':.9,
+    }
+  });
+
+  // ── RECORRIDOS — blanco con glow blanco, filtradas por id ──
+  // glow exterior difuso
+  map.addLayer({id:'rec-glow3',type:'line',source:'recorridos',
+    filter:['==','id',-1],
+    layout:{visibility:'visible','line-join':'round','line-cap':'round'},
+    paint:{'line-width':40,'line-color':'#ffffff','line-opacity':.04,'line-blur':8}
+  });
+  map.addLayer({id:'rec-glow2',type:'line',source:'recorridos',
+    filter:['==','id',-1],
+    layout:{visibility:'visible','line-join':'round','line-cap':'round'},
+    paint:{'line-width':16,'line-color':'#ffffff','line-opacity':.14,'line-blur':4}
+  });
+  map.addLayer({id:'rec-glow1',type:'line',source:'recorridos',
+    filter:['==','id',-1],
+    layout:{visibility:'visible','line-join':'round','line-cap':'round'},
+    paint:{'line-width':6,'line-color':'#ffffff','line-opacity':.35,'line-blur':1.5}
+  });
+  // línea central blanca
+  map.addLayer({id:'rec-core',type:'line',source:'recorridos',
+    filter:['==','id',-1],
+    layout:{visibility:'visible','line-join':'round','line-cap':'round'},
+    paint:{'line-width':1.8,'line-color':'#ffffff','line-opacity':.95}
+  });
+  // flujo animado blanco pulsante
+  map.addLayer({id:'rec-flow',type:'line',source:'recorridos',
+    filter:['==','id',-1],
+    layout:{visibility:'visible','line-join':'round','line-cap':'round'},
+    paint:{'line-width':3.5,'line-color':'#ffffff','line-opacity':.7,'line-dasharray':[3,5]}
+  });
+
+  // ── WAYPOINTS — puntos blancos, filtrados por ruta ──
+  map.addLayer({id:'wp-aura',type:'circle',source:'waypoints',
+    filter:['==','ruta_id',-1],
+    layout:{visibility:'visible'},
+    paint:{'circle-radius':28,'circle-color':'#ffffff','circle-opacity':.1,'circle-blur':.8}
+  });
+  map.addLayer({id:'wp-ring1',type:'circle',source:'waypoints',
+    filter:['==','ruta_id',-1],
+    layout:{visibility:'visible'},
+    paint:{'circle-radius':10,'circle-color':'rgba(0,0,0,0)','circle-stroke-width':1.5,'circle-stroke-color':'rgba(255,255,255,.5)'}
+  });
+  map.addLayer({id:'wp-core',type:'circle',source:'waypoints',
+    filter:['==','ruta_id',-1],
+    layout:{visibility:'visible'},
+    paint:{'circle-radius':5,'circle-color':'#ffffff','circle-opacity':1,'circle-stroke-width':1.5,'circle-stroke-color':'rgba(0,0,0,.6)'}
+  });
+  map.addLayer({id:'wp-labels',type:'symbol',source:'waypoints',
+    filter:['==','ruta_id',-1],
+    layout:{visibility:'visible','text-field':['to-string',['get','orden']],'text-size':7,'text-font':['Noto Sans Regular'],'text-anchor':'center'},
+    paint:{'text-color':'#000','text-opacity':.9}
+  });
+
+  // ── ESPACIOS — plasma naranja ──
+  map.addLayer({id:'esp-aura',type:'circle',source:'espacios',
+    layout:{visibility:'none'},
+    paint:{
+      'circle-radius':['interpolate',['linear'],['get','menciones'],1,20,10,40,30,60,90,90],
+      'circle-color':C.lava,'circle-opacity':.06,'circle-blur':.8
+    }
+  });
+  map.addLayer({id:'esp-ring',type:'circle',source:'espacios',
+    layout:{visibility:'none'},
+    paint:{
+      'circle-radius':['interpolate',['linear'],['get','menciones'],1,8,10,16,30,26,90,42],
+      'circle-color':'rgba(0,0,0,0)',
+      'circle-stroke-width':1.5,'circle-stroke-color':C.lava,'circle-stroke-opacity':.5
+    }
+  });
+  map.addLayer({id:'esp-core',type:'circle',source:'espacios',
+    layout:{visibility:'none'},
+    paint:{
+      'circle-radius':['interpolate',['linear'],['get','menciones'],1,5,10,12,30,20,90,32],
+      'circle-color':C.lava,'circle-opacity':.85,
+      'circle-stroke-width':1,'circle-stroke-color':'rgba(255,200,100,.4)'
+    }
+  });
+
+  // ── PERSONAJES — colores plasma individuales ──
+  // ── PERSONAJES — todos blancos, tamaño por menciones ──
+  map.addLayer({id:'pers-aura',type:'circle',source:'personajes',
+    layout:{visibility:'none'},filter:['==','personaje','__ninguno__'],
+    paint:{
+      'circle-radius':['interpolate',['linear'],['get','menciones'],1,18,5,28,10,38],
+      'circle-color':'#ffffff','circle-opacity':.1,'circle-blur':.7
+    }
+  });
+  map.addLayer({id:'pers-ring',type:'circle',source:'personajes',
+    layout:{visibility:'none'},filter:['==','personaje','__ninguno__'],
+    paint:{
+      'circle-radius':['interpolate',['linear'],['get','menciones'],1,9,5,14,10,20],
+      'circle-color':'rgba(0,0,0,0)',
+      'circle-stroke-width':1.5,'circle-stroke-color':'rgba(255,255,255,.5)','circle-stroke-opacity':1
+    }
+  });
+  map.addLayer({id:'pers-core',type:'circle',source:'personajes',
+    layout:{visibility:'none'},filter:['==','personaje','__ninguno__'],
+    paint:{
+      'circle-radius':['interpolate',['linear'],['get','menciones'],1,6,5,10,10,16],
+      'circle-color':'#ffffff','circle-opacity':.95,
+      'circle-stroke-width':1.5,'circle-stroke-color':'rgba(0,0,0,.6)'
+    }
+  });
+
+  // ── FEMINICIDIOS — plasma por espacio ──
+  map.addLayer({id:'fem-aura',type:'circle',source:'feminicidios',
+    layout:{visibility:'none'},
+    paint:{'circle-radius':['interpolate',['linear'],['zoom'],10,20,15,36],'circle-color':femExpr(),'circle-opacity':.1,'circle-blur':.7}
+  });
+  map.addLayer({id:'fem-ring',type:'circle',source:'feminicidios',
+    layout:{visibility:'none'},
+    paint:{
+      'circle-radius':['interpolate',['linear'],['zoom'],10,8,15,14],
+      'circle-color':'rgba(0,0,0,0)',
+      'circle-stroke-width':1.5,'circle-stroke-color':femExpr(),'circle-stroke-opacity':.6
+    }
+  });
+  map.addLayer({id:'fem-core',type:'circle',source:'feminicidios',
+    layout:{visibility:'none'},
+    paint:{
+      'circle-radius':['interpolate',['linear'],['zoom'],10,4,15,8],
+      'circle-color':femExpr(),'circle-opacity':.9,
+      'circle-stroke-width':1,'circle-stroke-color':'rgba(0,0,0,.4)'
+    }
+  });
+}
+
+// ── ANIMACIÓN FLUJO ──────────────────────────────────────────────────────────
+let dashAnim=0;
+function animarFlujo(){
+  dashAnim=(dashAnim+.08)%8;
+  const t=dashAnim;
+  if(map.getLayer('rec-flow')){
+    // simular movimiento rotando el offset del dash
+    const len=2,gap=6,total=len+gap;
+    const offset=t%total;
+    // no podemos animar line-dasharray-offset en MapLibre directamente,
+    // pero cambiamos opacidad pulsante para simular flujo
+    const pulse=.5+.3*Math.sin(t*Math.PI/2);
+    map.setPaintProperty('rec-flow','line-opacity',pulse);
+    map.setPaintProperty('rec-glow1','line-opacity',.3+.15*Math.sin(t*Math.PI/3));
+  }
+  flowAnimFrame=requestAnimationFrame(animarFlujo);
+}
+function pararFlujo(){if(flowAnimFrame){cancelAnimationFrame(flowAnimFrame);flowAnimFrame=null;}}
+
+// ── TOOLTIP ──────────────────────────────────────────────────────────────────
+function mostrarTT(e,lugar,cita,meta,color){
+  const tt=document.getElementById('mapa-tt');
+  tt.style.borderLeftColor=color||C.lava;
+  tt.style.boxShadow=`0 0 30px ${color||C.lava}33, 0 0 60px ${color||C.lava}11`;
+  document.getElementById('tt-l').textContent=lugar;
+  document.getElementById('tt-c').textContent=cita?`"${cita}"`:'' ;
+  document.getElementById('tt-m').textContent=meta||'';
+  const x=e.originalEvent.clientX,y=e.originalEvent.clientY,w=295;
+  tt.style.left=(x+22+w>window.innerWidth?x-w-10:x+22)+'px';
+  tt.style.top=Math.max(10,y-40)+'px';
+  tt.style.display='block';
+}
+function ocultarTT(){document.getElementById('mapa-tt').style.display='none';}
+
+// Expandir anillo al hover
+function expandirAura(source,field,value,radBase,mult=2){
+  if(!map.getLayer(source+'aura'||source)) return;
+  try{
+    map.setPaintProperty(source,field,['case',
+      ['==',['get','nombre'===field?'nombre':'lugar'],value],
+      ['*',radBase,mult],radBase
+    ]);
+  }catch(e){}
+}
+
+// ── INTERACCIONES ────────────────────────────────────────────────────────────
+function agregarInteracciones(){
+  // recorridos — click en mapa activa esa ruta
+  map.on('mousemove','rec-core',e=>{map.getCanvas().style.cursor='pointer';});
+  map.on('mouseleave','rec-core',()=>{map.getCanvas().style.cursor='';});
+  map.on('click','rec-core',e=>{
+    const p=e.features[0].properties;
+    const rid=p.id;
+    // sincronizar con la lista del panel
+    document.querySelectorAll('.rec-item').forEach(el=>{
+      el.classList.toggle('active',parseInt(el.dataset.rid)===rid);
+    });
+    activarRutaEnMapa(rid);
+    const citas=parsearCitas(p.citas),cita=citas[Math.floor(Math.random()*citas.length)]||'';
+    mostrarInfo({titulo:NOMBRES_RUTAS[rid]||p.nombre,meta:`${p.etapa_vida} · ${p.medio_transporte}`,desc:p.descripcion,citas:[cita],color:'#fff'});
+    mostrarCitaF(cita);
+    abrirTab('recorridos');
+  });
+
+  // waypoints — expandir aura al hover
+  map.on('mousemove','wp-core',e=>{
+    map.getCanvas().style.cursor='pointer';
+    const p=e.features[0].properties;
+    mostrarTT(e,`${p.orden}. ${p.lugar}`,p.cita,`${p.ruta_nombre} · ${p.etapa}`,C.lava);
+    map.setPaintProperty('wp-aura','circle-radius',['case',['==',['get','orden'],p.orden],60,30]);
+    map.setPaintProperty('wp-ring2','circle-radius',['case',['==',['get','orden'],p.orden],24,14]);
+  });
+  map.on('mouseleave','wp-core',()=>{
+    map.getCanvas().style.cursor='';ocultarTT();
+    map.setPaintProperty('wp-aura','circle-radius',30);
+    map.setPaintProperty('wp-ring2','circle-radius',14);
+  });
+  map.on('click','wp-core',e=>{
+    const p=e.features[0].properties;
+    mostrarInfo({titulo:`${p.orden}. ${p.lugar}`,meta:`${p.ruta_nombre} · ${p.etapa}`,desc:`${p.tipo} · ${p.personajes}`,citas:p.cita?[p.cita]:[],color:C.lava});
+    if(p.cita) mostrarCitaF(`"${p.cita}"`);
+  });
+
+  // espacios — expandir al hover
+  map.on('mousemove','esp-core',e=>{
+    map.getCanvas().style.cursor='pointer';
+    const p=e.features[0].properties;
+    mostrarTT(e,`${p.nombre}  ·  ${p.menciones} menciones`,p.primera_cita,`${p.categoria} · ${p.escala}`,C.lava);
+    const nm=p.nombre;
+    map.setPaintProperty('esp-aura','circle-radius',['case',['==',['get','nombre'],nm],
+      ['*',['interpolate',['linear'],['get','menciones'],1,20,10,40,30,60,90,90],2.2],
+      ['interpolate',['linear'],['get','menciones'],1,20,10,40,30,60,90,90]
+    ]);
+    map.setPaintProperty('esp-ring','circle-radius',['case',['==',['get','nombre'],nm],
+      ['*',['interpolate',['linear'],['get','menciones'],1,8,10,16,30,26,90,42],1.5],
+      ['interpolate',['linear'],['get','menciones'],1,8,10,16,30,26,90,42]
+    ]);
+  });
+  map.on('mouseleave','esp-core',()=>{
+    map.getCanvas().style.cursor='';ocultarTT();
+    map.setPaintProperty('esp-aura','circle-radius',['interpolate',['linear'],['get','menciones'],1,20,10,40,30,60,90,90]);
+    map.setPaintProperty('esp-ring','circle-radius',['interpolate',['linear'],['get','menciones'],1,8,10,16,30,26,90,42]);
+  });
+  map.on('click','esp-core',e=>{
+    const p=e.features[0].properties;
+    mostrarInfo({titulo:p.nombre,meta:`${p.categoria} · ${p.escala} · ${p.menciones} menciones`,desc:p.tipo,citas:p.primera_cita?[p.primera_cita]:[],color:C.lava});
+  });
+
+  // personajes
+  map.on('mousemove','pers-core',e=>{
+    map.getCanvas().style.cursor='pointer';
+    const p=e.features[0].properties,citas=parsearCitas(p.citas);
+    mostrarTT(e,`${p.lugar} — ${p.personaje}`,citas[0]||'',`${p.relacion} · ${p.menciones} menciones`,'#fff');
+    map.setPaintProperty('pers-aura','circle-radius',['case',
+      ['all',['==',['get','lugar'],p.lugar],['==',['get','personaje'],p.personaje]],
+      ['*',['interpolate',['linear'],['get','menciones'],1,18,5,28,10,38],2],
+      ['interpolate',['linear'],['get','menciones'],1,18,5,28,10,38]
+    ]);
+  });
+  map.on('mouseleave','pers-core',()=>{
+    map.getCanvas().style.cursor='';ocultarTT();
+    map.setPaintProperty('pers-aura','circle-radius',['interpolate',['linear'],['get','menciones'],1,18,5,28,10,38]);
+  });
+  map.on('click','pers-core',e=>{
+    const p=e.features[0].properties,citas=parsearCitas(p.citas);
+    mostrarInfo({titulo:p.lugar,meta:`${p.personaje} · ${p.relacion} · ${p.menciones} menciones`,desc:p.categoria,citas:citas.slice(0,2),color:'#fff'});
+    if(citas[0]) mostrarCitaF(`${p.personaje}: "${citas[0]}"`);
+  });
+
+  // feminicidios
+  map.on('mousemove','fem-core',e=>{
+    map.getCanvas().style.cursor='pointer';
+    const p=e.features[0].properties,color=ESP_COLOR[p.tipo_espacio]||'#444';
+    mostrarTT(e,p.tipo_espacio,'',`${p.año} · ${p.grupo_etareo} · ${p.delegacion}`,color);
+  });
+  map.on('mouseleave','fem-core',()=>{map.getCanvas().style.cursor='';ocultarTT();});
+  map.on('click','fem-core',e=>{
+    const p=e.features[0].properties;
+    mostrarInfo({titulo:p.tipo_espacio,meta:`${p.año} · ${p.grupo_etareo} · ${p.relacion}`,desc:p.delegacion,citas:[],color:ESP_COLOR[p.tipo_espacio]||'#444'});
+  });
+
+  map.on('click',e=>{
+    const capas=['rec-core','wp-core','esp-core','pers-core','fem-core'];
+    if(!map.queryRenderedFeatures(e.point,{layers:capas}).length){resetInfo();ocultarCitaF();}
+  });
+}
+
+// ── SELECTOR RED — con des-selección ────────────────────────────────────────
+function selRedLayer(f){
+  if(activeRedLayer===f){
+    // des-seleccionar
+    activeRedLayer=null;
+    map.setLayoutProperty('network-layer','visibility','none');
+    document.querySelectorAll('#lg-syntax .li').forEach(el=>el.classList.remove('active'));
+  } else {
+    activeRedLayer=f;
+    map.setLayoutProperty('network-layer','visibility','visible');
+    map.setPaintProperty('network-layer','line-color',ssExpr(f));
+    document.querySelectorAll('#lg-syntax .li').forEach(el=>el.classList.toggle('active',el.dataset.layer===f));
+  }
+  actualizarLeyenda();
+}
+
+// ── OVERLAYS ─────────────────────────────────────────────────────────────────
+const OV={
+  // recorridos y waypoints ya no usan visibility — se controlan por filtro de id
+  espacios:['esp-aura','esp-ring','esp-core'],
+  'personajes-pts':['pers-aura','pers-ring','pers-core'],
+  feminicidios:['fem-aura','fem-ring','fem-core'],
+};
+function toggleOverlay(nombre){
+  const on=!activeOverlays.has(nombre);
+  if(on) activeOverlays.add(nombre); else activeOverlays.delete(nombre);
+  const vis=on?'visible':'none';
+  (OV[nombre]||[]).forEach(id=>{if(map.getLayer(id)) map.setLayoutProperty(id,'visibility',vis);});
+  document.querySelectorAll(`[data-layer="${nombre}"]`).forEach(el=>el.classList.toggle('active',on));
+  if(nombre==='feminicidios') actualizarStats();
+  if(nombre==='personajes-pts'&&on) aplicarFiltroPersonaje();
+  if(nombre==='espacios'&&on) map.flyTo({center:[-30,20],zoom:2,duration:1400});
+  actualizarLeyenda();
+}
+function setOverlay(nombre,on){if(on===activeOverlays.has(nombre))return;toggleOverlay(nombre);}
+function toggleGrupo(id){document.getElementById(id).classList.toggle('abierto');}
+
+// ── MOMENTOS ─────────────────────────────────────────────────────────────────
+const MOMENTOS={
+  1:{red:'NACHr500m',overlays:[],fly:{center:[-99.163,19.415],zoom:11.5}},
+  2:{red:'NACHr500m',overlays:['recorridos','waypoints'],fly:{center:[-99.163,19.415],zoom:13}},
+  3:{red:null,overlays:['espacios'],fly:{center:[-30,20],zoom:2}},
+  4:{red:'NACHr500m',overlays:['recorridos','feminicidios'],fly:{center:[-99.155,19.400],zoom:12.5}},
+};
+const CITAS_M={
+  1:'"Me acuerdo perfecto de la calle por donde tenía que caminar. No me sabía nombres de calles, sino caminos."',
+  2:'"Para mí, Insurgentes es la faz de la ciudad de México."',
+  3:'"Necesito contarte todo esto, primero, porque nunca he hablado con nadie de lo que me pasó."',
+  4:'"Uno tiene que confrontar el peligro para sobrevivir."',
+};
+function setMomento(n){
+  document.querySelectorAll('.momento').forEach(el=>el.classList.toggle('active',parseInt(el.dataset.m)===n));
+  mostrarCitaF(CITAS_M[n]);
+  const cfg=MOMENTOS[n];
+  Object.keys(OV).forEach(nombre=>setOverlay(nombre,false));
+  cfg.overlays.forEach(nombre=>setOverlay(nombre,true));
+  if(cfg.red){if(map.getLayer('network-layer')) map.setLayoutProperty('network-layer','visibility','visible');selRedLayer(cfg.red);}
+  else{if(map.getLayer('network-layer')) map.setLayoutProperty('network-layer','visibility','none');}
+  map.flyTo({...cfg.fly,duration:1300});
+  if(n===4) actualizarStats();
+  actualizarLeyenda();
+}
+
+// ── LEYENDA ──────────────────────────────────────────────────────────────────
+function actualizarLeyenda(){
+  const el=document.getElementById('leyenda');let html='';
+  const netVis=map.getLayer('network-layer')&&map.getLayoutProperty('network-layer','visibility')!=='none';
+  if(netVis){
+    html+=`<div class="ley-t">${SS_LAB[activeRedLayer]}</div><div class="ley-items">`;
+    ['Bajo','','Medio','','Alto'].forEach((l,i)=>{
+      html+=`<div class="ley-i"><div class="ley-linea" style="background:${SS_RAMP[i]};box-shadow:0 0 4px ${SS_RAMP[i]}"></div><span>${l}</span></div>`;
+    });
+    html+='</div>';
+  }
+  if(activeOverlays.has('espacios')){
+    html+=`<div class="ley-t" style="margin-top:10px">Menciones en el texto</div><div class="ley-items">`;
+    [[6,'1–5'],[13,'10–30'],[22,'30–90']].forEach(([r,l])=>{
+      html+=`<div class="ley-i"><div class="ley-circ" style="width:${r}px;height:${r}px;background:${C.lava};box-shadow:0 0 ${r}px ${C.lava}66"></div><span>${l}</span></div>`;
+    });
+    html+='</div>';
+  }
+  if(activeOverlays.has('feminicidios')){
+    html+=`<div class="ley-t" style="margin-top:10px;color:var(--neon);text-shadow:0 0 8px var(--neon)">Tipo de espacio</div><div class="ley-items">`;
+    Object.entries(ESP_COLOR).filter(([k])=>k!=='Indeterminado').forEach(([l,c])=>{
+      html+=`<div class="ley-i"><div class="ley-cuad" style="background:${c};box-shadow:0 0 6px ${c}"></div><span>${l}</span></div>`;
+    });
+    html+='</div>';
+  }
+  if(html){el.style.display='block';el.innerHTML=html;}else{el.style.display='none';}
+}
+
+// ── STATS ────────────────────────────────────────────────────────────────────
+function actualizarStats(){
+  const el=document.getElementById('stats');
+  if(!activeOverlays.has('feminicidios')){el.style.display='none';return;}
+  const f=DATA.feminicidios?.features||[];
+  const dom=f.filter(x=>x.properties.tipo_espacio==='Espacio cerrado doméstico').length;
+  const pub=f.filter(x=>x.properties.tipo_espacio==='Espacio abierto público').length;
+  el.style.display='block';
+  el.innerHTML=`<b>${f.length}</b> feminicidios 2019–2026<br><b style="color:#ff0066;text-shadow:0 0 8px #ff0066">${dom}</b> espacio doméstico (${Math.round(dom/f.length*100)}%)<br><b>${pub}</b> espacio público (${Math.round(pub/f.length*100)}%)`;
+}
+
+// ── LISTA PERSONAJES VERTICAL ────────────────────────────────────────────────
+// nombres de rutas cortos para la lista
+const NOMBRES_RUTAS={
+  1:'El canalito — infancia en la Roma',
+  2:'El Plymouth del padre — paseos dominicales',
+  3:'Primer trabajo — la Zona Rosa',
+  4:'El tren a San Blas — origen de la madre',
+  5:'Con Arturo — caminar la ciudad política',
+  6:'Segundo trabajo — perdida en Del Valle',
+  7:'El pesero al Ajusco — clase trabajadora',
+  8:'Insurgentes — la columna vertebral',
+  9:'Caminatas nocturnas con Lourdes y Claude',
+  10:'El camión — la democracia involuntaria',
+  11:'Socorro — Europa y la fuga',
+  12:'Ramiro — Cuernavaca y el parque',
+  13:'Los padres migrantes — provincia a CDMX',
+  14:'La mudanza — dejar Zacatecas para siempre',
+  15:'Ramiro joven — Zona Rosa en coche',
+  16:'La ventana — la no-ruta',
+};
+
+// mapa de menciones — declarado antes de cualquier uso
+const mencionesMapGlobal={
+  'Susana (narradora)':638,'Lourdes':443,'Madre de Susana':85,'Claude':77,
+  'Socorro':72,'Padre de Susana':61,'Ramiro':61,'Arturo':45,
+  'María Laura':33,'Mateo':34,'Lola':17,'Fermín':14,'González':11,
+};
+
+// personajes visibles en el mapa (todos activos por defecto)
+let persVisibles = new Set(Object.keys(mencionesMapGlobal));
+
+function construirChips(){
+  const cont=document.getElementById('lista-personajes');
+  const mencionesMax=638;
+  const mencionesMap=mencionesMapGlobal;
+
+  // fila "Todos" con toggle global
+  const todos=document.createElement('div');
+  todos.className='pers-item';todos.id='pers-todos';
+  todos.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px 22px;border-bottom:1px solid rgba(255,255,255,.04);cursor:default';
+  todos.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:12px;height:12px;border-radius:50%;background:#fff;opacity:.7"></div>
+      <div>
+        <div class="pers-nombre">Todos los personajes</div>
+        <div class="pers-menciones">Activa o desactiva individualmente</div>
+      </div>
+    </div>
+    <div id="toggle-todos" style="font-size:.65rem;color:var(--electro);cursor:pointer;letter-spacing:.06em;font-weight:700" onclick="toggleTodosPersonajes(event)">OCULTAR</div>
+  `;
+  cont.appendChild(todos);
+
+  Object.entries(mencionesMap).forEach(([p,menciones])=>{
+    const ratio=menciones/mencionesMax;
+    const r=Math.max(5,Math.round(5+ratio*20));
+    const aura=r*2.8;
+    const visible=persVisibles.has(p);
+
+    const item=document.createElement('div');
+    item.className='pers-item';item.dataset.pers=p;
+    item.innerHTML=`
+      <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer" onclick="setPersonaje('${p.replace(/'/g,"\\'")}')">
+        <div class="pers-pt-wrap" style="width:${aura}px;height:${aura}px;flex-shrink:0">
+          <div class="pers-pt-aura" style="width:${aura}px;height:${aura}px;background:#fff;opacity:${visible?.18:.04}"></div>
+          <div class="pers-pt-core" style="width:${r*2}px;height:${r*2}px;margin:${(aura-r*2)/2}px;opacity:${visible?1:.25}"></div>
+        </div>
+        <div style="min-width:0">
+          <div class="pers-nombre" style="opacity:${visible?1:.35}">${p}</div>
+          <div class="pers-menciones">${menciones} menciones</div>
+        </div>
+      </div>
+      <div class="pers-ojo" data-pers="${p}" title="Mostrar/ocultar en el mapa"
+        style="font-size:.75rem;cursor:pointer;padding:4px 8px;color:${visible?'#fff':'rgba(255,255,255,.2)'};flex-shrink:0"
+        onclick="togglePersonajeVisible('${p.replace(/'/g,"\\'")}',event)">
+        ${visible?'●':'○'}
+      </div>
+    `;
+    cont.appendChild(item);
+  });
+}
+
+function togglePersonajeVisible(p, e){
+  e.stopPropagation();
+  if(persVisibles.has(p)) persVisibles.delete(p);
+  else persVisibles.add(p);
+
+  // actualizar UI
+  const item=document.querySelector(`.pers-item[data-pers="${p}"]`);
+  if(item){
+    const visible=persVisibles.has(p);
+    const ojo=item.querySelector('.pers-ojo');
+    if(ojo){ ojo.textContent=visible?'●':'○'; ojo.style.color=visible?'#fff':'rgba(255,255,255,.2)'; }
+    const nombre=item.querySelector('.pers-nombre');
+    if(nombre) nombre.style.opacity=visible?1:.35;
+    const aura=item.querySelector('.pers-pt-aura');
+    if(aura) aura.style.opacity=visible?.18:.04;
+    const core=item.querySelector('.pers-pt-core');
+    if(core) core.style.opacity=visible?1:.25;
+  }
+
+  // recalcular filtro en mapa
+  aplicarFiltroPersonaje();
+}
+
+function toggleTodosPersonajes(e){
+  e.stopPropagation();
+  const hayAlguno=persVisibles.size>0;
+  const btn=document.getElementById('toggle-todos');
+  if(hayAlguno){
+    persVisibles.clear();
+    if(btn) btn.textContent='MOSTRAR';
+  } else {
+    Object.keys(mencionesMapGlobal).forEach(p=>persVisibles.add(p));
+    if(btn) btn.textContent='OCULTAR';
+  }
+  // actualizar todos los ojos
+  document.querySelectorAll('.pers-item[data-pers]').forEach(item=>{
+    const p=item.dataset.pers;
+    const visible=persVisibles.has(p);
+    const ojo=item.querySelector('.pers-ojo');
+    if(ojo){ ojo.textContent=visible?'●':'○'; ojo.style.color=visible?'#fff':'rgba(255,255,255,.2)'; }
+    const nombre=item.querySelector('.pers-nombre');
+    if(nombre) nombre.style.opacity=visible?1:.35;
+    const aura=item.querySelector('.pers-pt-aura');
+    if(aura) aura.style.opacity=visible?.18:.04;
+    const core=item.querySelector('.pers-pt-core');
+    if(core) core.style.opacity=visible?1:.25;
+  });
+  aplicarFiltroPersonaje();
+}
+
+function setPersonaje(p){
+  activePersonaje=p;
+  document.querySelectorAll('.pers-item[data-pers]').forEach(el=>{
+    el.classList.toggle('active',el.dataset.pers===p);
+  });
+  setOverlay('personajes-pts',true);
+  aplicarFiltroPersonaje();
+  mostrarResumenPersonaje(p);
+  abrirTab('personajes');
+}
+
+// ── LISTA RECORRIDOS ──────────────────────────────────────────────────────────
+function construirRecorridos(){
+  const cont=document.getElementById('lista-recorridos');
+  if(!DATA.recorridos||!DATA.waypoints) return;
+
+  const rutas=DATA.recorridos.features;
+  const wpsAll=DATA.waypoints.features;
+
+  rutas.forEach(feat=>{
+    const p=feat.properties;
+    const rid=p.id;
+    const nombreCorto=NOMBRES_RUTAS[rid]||p.nombre;
+    const wps=wpsAll.filter(w=>w.properties.ruta_id===rid)
+      .sort((a,b)=>a.properties.orden-b.properties.orden);
+
+    const item=document.createElement('div');
+    item.className='rec-item';item.dataset.rid=rid;
+
+    const wpsHTML=wps.map(w=>{
+      const wp=w.properties;
+      return `<div class="rec-wp" data-rid="${rid}" data-orden="${wp.orden}" data-lon="${w.geometry.coordinates[0]}" data-lat="${w.geometry.coordinates[1]}">
+        <div class="rec-wp-n">${wp.orden}</div>
+        <div class="rec-wp-info">
+          <div class="rec-wp-lugar">${wp.lugar}</div>
+          <div class="rec-wp-tipo">${wp.tipo}</div>
+          ${wp.cita?`<div class="rec-wp-cita">"${wp.cita}"</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+
+    item.innerHTML=`
+      <div class="rec-head">
+        <div class="rec-num">${String(rid).padStart(2,'0')}</div>
+        <div style="flex:1">
+          <div class="rec-nombre">${nombreCorto}</div>
+          <div class="rec-etapa">${p.etapa_vida} · ${p.medio_transporte}</div>
+        </div>
+        <div class="rec-arr">▶</div>
+      </div>
+      <div class="rec-wps">${wpsHTML}</div>
+    `;
+
+    // click en cabecera — activar ruta en mapa
+    item.querySelector('.rec-head').addEventListener('click',()=>{
+      const yaActivo=item.classList.contains('active');
+      document.querySelectorAll('.rec-item').forEach(el=>el.classList.remove('active'));
+      if(!yaActivo){
+        item.classList.add('active');
+        activarRutaEnMapa(rid);
+      } else {
+        desactivarRutas();
+      }
+    });
+
+    // click en waypoint — volar al punto
+    item.querySelectorAll('.rec-wp').forEach(el=>{
+      el.addEventListener('click',e=>{
+        e.stopPropagation();
+        const lon=parseFloat(el.dataset.lon),lat=parseFloat(el.dataset.lat);
+        if(!isNaN(lon)&&!isNaN(lat)){
+          // asegurar que la ruta esté activa
+          if(rutaActivaId!==rid) activarRutaEnMapa(rid);
+          map.flyTo({center:[lon,lat],zoom:15,duration:800});
+        }
+      });
+    });
+
+    cont.appendChild(item);
+  });
+}
+
+let rutaActivaId = null;
+
+function activarRutaEnMapa(rid){
+  rutaActivaId = rid;
+  // filtrar todas las capas de recorrido al id seleccionado
+  ['rec-glow3','rec-glow2','rec-glow1','rec-core','rec-flow'].forEach(id=>{
+    if(map.getLayer(id)) map.setFilter(id,['==','id',rid]);
+  });
+  // filtrar waypoints al ruta_id seleccionado
+  ['wp-aura','wp-ring1','wp-core','wp-labels'].forEach(id=>{
+    if(map.getLayer(id)) map.setFilter(id,['==','ruta_id',rid]);
+  });
+  // arrancar animación de flujo
+  animarFlujo();
+  // volar a los waypoints de esa ruta
+  const wps=DATA.waypoints.features.filter(w=>w.properties.ruta_id===rid);
+  if(wps.length>0){
+    const lons=wps.map(w=>w.geometry.coordinates[0]);
+    const lats=wps.map(w=>w.geometry.coordinates[1]);
+    const cx=(Math.min(...lons)+Math.max(...lons))/2;
+    const cy=(Math.min(...lats)+Math.max(...lats))/2;
+    if(cy>19&&cy<19.6) map.flyTo({center:[cx,cy],zoom:13.5,duration:1000});
+  }
+}
+
+function desactivarRutas(){
+  rutaActivaId=null;
+  pararFlujo();
+  ['rec-glow3','rec-glow2','rec-glow1','rec-core','rec-flow'].forEach(id=>{
+    if(map.getLayer(id)) map.setFilter(id,['==','id',-1]);
+  });
+  ['wp-aura','wp-ring1','wp-core','wp-labels'].forEach(id=>{
+    if(map.getLayer(id)) map.setFilter(id,['==','ruta_id',-1]);
+  });
+}
+function aplicarFiltroPersonaje(){
+  if(!map.getLayer('pers-core'))return;
+  const visibles=Array.from(persVisibles);
+  if(visibles.length===0){
+    // ocultar todo
+    ['pers-aura','pers-ring','pers-core'].forEach(id=>{
+      if(map.getLayer(id)) map.setLayoutProperty(id,'visibility','none');
+    });
+    return;
+  }
+  ['pers-aura','pers-ring','pers-core'].forEach(id=>{
+    if(map.getLayer(id)) map.setLayoutProperty(id,'visibility','visible');
+  });
+  // filtrar: personaje activo (si hay uno) dentro de los visibles
+  let filtro;
+  if(activePersonaje!=='todos' && persVisibles.has(activePersonaje)){
+    filtro=['==','personaje',activePersonaje];
+    map.flyTo({center:[-99.163,19.415],zoom:12,duration:900});
+  } else if(visibles.length===Object.keys(mencionesMapGlobal).length){
+    filtro=null; // todos visibles, sin filtro
+  } else {
+    filtro=['in',['get','personaje'],['literal',visibles]];
+  }
+  ['pers-aura','pers-ring','pers-core'].forEach(id=>map.setFilter(id,filtro));
+}
+function mostrarResumenPersonaje(p){
+  const el=document.getElementById('pers-res');
+  if(p==='todos'){el.innerHTML='<div style="color:var(--muted);font-size:.7rem">Selecciona un personaje.</div>';return;}
+  const r=(DATA.resumen||[]).find(x=>x.personaje===p);
+  if(!r){el.innerHTML='';return;}
+  const color=PERS_COLOR[p]||'#aaa';
+  el.innerHTML=`
+    <div style="padding:14px 22px">
+    <div class="pr-nom" style="color:${color}">${r.personaje}</div>
+    <div class="pr-stat"><span>Menciones espaciales: </span>${r.total_menciones_espaciales}</div>
+    <div class="pr-stat"><span>Relación dominante: </span>${r.relacion_dominante}</div>
+    <div class="pr-sec">Top lugares</div><div class="pr-lista">${r.top_lugares}</div>
+    <div class="pr-sec">Espacios interiores</div><div class="pr-lista">${r.espacios_interiores||'—'}</div>
+    <div class="pr-sec">Espacios públicos</div><div class="pr-lista">${r.espacios_publicos||'—'}</div>
+    <div class="pr-sec">Transporte</div><div class="pr-lista">${r.medios_transporte||'—'}</div>
+    ${r.cita_ejemplo?`<div class="pr-cita" style="border-color:${color};color:${color}">"${r.cita_ejemplo}"</div>`:''}
+    </div>
+  `;
+}
+
+// ── GRADIENTE ────────────────────────────────────────────────────────────────
+function construirGradiente(){
+  const cont=document.getElementById('grad-niveles');
+  if(!DATA.gradiente)return;
+  DATA.gradiente.forEach(niv=>{
+    const top=niv.espacios.sort((a,b)=>b.menciones-a.menciones).slice(0,5);
+    const esp=top.map(e=>`${e.espacio} (${e.menciones})`).join(', ');
+    const total=niv.espacios.reduce((s,e)=>s+e.menciones,0);
+    const h=Math.max(16,Math.min(50,total/5));
+    const div=document.createElement('div');div.className='grad-niv';
+    const esV=niv.nivel===3;
+    if(esV){div.style.background='rgba(255,255,255,.06)';div.style.borderLeft='2px solid #fff';}
+    div.innerHTML=`
+      <div class="grad-bar" style="background:${niv.color};height:${h}px;box-shadow:0 0 8px ${niv.color}88"></div>
+      <div>
+        <div class="grad-nom" style="color:${niv.color}">N${niv.nivel} — ${niv.nombre}</div>
+        <div class="grad-desc">${niv.descripcion}</div>
+        <div class="grad-esp">${esp}</div>
+      </div>`;
+    cont.appendChild(div);
+  });
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function abrirTab(nombre){
+  const tabs=['capas','recorridos','personajes','gradiente'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===nombre));
+  document.querySelectorAll('.tab-c').forEach(el=>el.classList.toggle('active',el.id===`tab-${nombre}`));
+}
+
+// ── INFO ─────────────────────────────────────────────────────────────────────
+function mostrarInfo({titulo,meta,desc,citas,color}){
+  document.getElementById('info').innerHTML=`
+    <div class="i-t" style="color:${color}">${titulo}</div>
+    <div class="i-m">${meta}</div>
+    ${desc?`<div style="margin-top:3px;font-size:.69rem">${desc}</div>`:''}
+    ${(citas||[]).filter(Boolean).map(c=>`<div class="i-cita" style="border-color:${color};color:${color}">"${c}"</div>`).join('')}
+  `;
+}
+function resetInfo(){document.getElementById('info').innerHTML='<div style="color:var(--muted);font-size:.7rem">Pasa el cursor o haz clic en el mapa.</div>';}
+function mostrarCitaF(t){const el=document.getElementById('cita-f');if(!t){ocultarCitaF();return;}el.textContent=t;el.classList.remove('oculta');}
+function ocultarCitaF(){document.getElementById('cita-f').classList.add('oculta');}
+function parsearCitas(raw){if(!raw)return[];if(Array.isArray(raw))return raw;try{return JSON.parse(raw);}catch{return[String(raw)];}}
+
+// ── INTRO ────────────────────────────────────────────────────────────────────
+(function(){
+  const intro=document.getElementById('intro');
+  const cnv=document.getElementById('intro-bg');
+  const ctx=cnv.getContext('2d');
+
+
+  const ruido=[
+    'Pánico','Peligro','Silencio','Odio','Cambio','Mujer','Espacio',
+    'Extranjero','Ruido','Vacío','Grieta','Exilio','Escritura','Recuerdo',
+    'Historia','Colonialismo','Máscara','Tortura','Lenguaje','Miedo',
+    'Umbral','Cuerpo','Territorio','Violencia','Mapa','Afuera','Gestos',
+    'Clase','Traducción','Forma','Tiempo','Plástico','Cerrado','Abierto',
+    'Susana','Lourdes','Socorro','Ramiro','Arturo','Lola','González',
+    'casa','oficina','calle','ventana','coche','camión','café','cuarto',
+    'sala','puerta','cama','espejo','baño','edificio','departamento',
+    'integración','flujo','barrio','sueño','silencio','ciudad','miedo',
+  ];
+  let _seed=99;
+  function sr(){_seed=(_seed*1664525+1013904223)>>>0;return _seed/4294967296;}
+  function rnd(){return ruido[Math.floor(sr()*ruido.length)];}
+
+  let _layout=null;
+  let _phases=[];
+  const FS=13;
+
+  function build(){
+    cnv.width=window.innerWidth; cnv.height=window.innerHeight;
+    _seed=99; _layout=[]; _phases=[];
+    const lh=Math.round(FS*1.52);
+    ctx.font=`italic ${FS}px Georgia,serif`;
+    let r=0, x=0;
+    function rowX(n){return -(n*71)%140;}
+    x=rowX(0);
+    const maxY=cnv.height+lh;
+    while(true){
+      const burst=Math.floor(sr()*3)+1;
+      for(let b=0;b<burst;b++){
+        const t=rnd()+'.  ';
+        const tw=ctx.measureText(t).width;
+        if(x+tw>cnv.width+20){r++;x=rowX(r);}
+        const y=r*lh+FS;
+        if(y>maxY) return;
+        _layout.push({t,x,y,tw,pi:_phases.length});
+        _phases.push({phase:sr(),period:3000+sr()*5000});
+        x+=tw;
+      }
+    }
+  }
+
+  build();
+  window.addEventListener('resize',build);
+
+  const t0=performance.now();
+  function frame(now){
+    if(!intro.style.display||intro.style.display!=='none'){
+      const el=now-t0;
+      ctx.clearRect(0,0,cnv.width,cnv.height);
+      ctx.font=`italic ${FS}px Georgia,serif`;
+      _layout.forEach(tok=>{
+        const ph=_phases[tok.pi];
+        const c=(el/ph.period+ph.phase)%1;
+        const op=c<0.4?c/0.4:c<0.6?1:(1-c)/0.4;
+        ctx.fillStyle=`rgba(255,255,255,${op*0.13})`;
+        ctx.fillText(tok.t,tok.x,tok.y);
+      });
+      requestAnimationFrame(frame);
+    }
+  }
+  requestAnimationFrame(frame);
+
+  window.cerrarIntro=function(){
+    intro.classList.add('oculto');
+    setTimeout(()=>intro.style.display='none',650);
+  };
+})();
+</script>
+</body>
+</html>

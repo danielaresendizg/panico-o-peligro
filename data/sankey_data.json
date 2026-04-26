@@ -1,0 +1,551 @@
+{
+  "nodes": [
+    {
+      "name": "Susana (narradora)",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Lourdes",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Madre de Susana",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Socorro",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Claude",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Ramiro",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Padre de Susana",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Arturo",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "María Laura",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Mateo",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Lola",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Fermín",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "González",
+      "tipo": "personaje",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Espacio doméstico",
+      "tipo": "categoria",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Espacio público",
+      "tipo": "categoria",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "Transporte",
+      "tipo": "categoria",
+      "nivel": -1,
+      "color": ""
+    },
+    {
+      "name": "cama",
+      "tipo": "lugar",
+      "nivel": 0,
+      "color": "#ffffff"
+    },
+    {
+      "name": "espejo",
+      "tipo": "lugar",
+      "nivel": 0,
+      "color": "#ffffff"
+    },
+    {
+      "name": "cuarto",
+      "tipo": "lugar",
+      "nivel": 1,
+      "color": "#ddddff"
+    },
+    {
+      "name": "baño",
+      "tipo": "lugar",
+      "nivel": 1,
+      "color": "#ddddff"
+    },
+    {
+      "name": "estudio",
+      "tipo": "lugar",
+      "nivel": 1,
+      "color": "#ddddff"
+    },
+    {
+      "name": "despacho",
+      "tipo": "lugar",
+      "nivel": 1,
+      "color": "#ddddff"
+    },
+    {
+      "name": "escritorio",
+      "tipo": "lugar",
+      "nivel": 1,
+      "color": "#ddddff"
+    },
+    {
+      "name": "sala",
+      "tipo": "lugar",
+      "nivel": 2,
+      "color": "#bbbbff"
+    },
+    {
+      "name": "cocina",
+      "tipo": "lugar",
+      "nivel": 2,
+      "color": "#bbbbff"
+    },
+    {
+      "name": "ventana",
+      "tipo": "lugar",
+      "nivel": 3,
+      "color": "#9999ff"
+    },
+    {
+      "name": "puerta",
+      "tipo": "lugar",
+      "nivel": 4,
+      "color": "#7777ff"
+    },
+    {
+      "name": "casa",
+      "tipo": "lugar",
+      "nivel": 5,
+      "color": "#5555ff"
+    },
+    {
+      "name": "apartamento",
+      "tipo": "lugar",
+      "nivel": 5,
+      "color": "#5555ff"
+    },
+    {
+      "name": "departamento",
+      "tipo": "lugar",
+      "nivel": 5,
+      "color": "#5555ff"
+    },
+    {
+      "name": "edificio",
+      "tipo": "lugar",
+      "nivel": 5,
+      "color": "#5555ff"
+    },
+    {
+      "name": "oficina",
+      "tipo": "lugar",
+      "nivel": 5,
+      "color": "#5555ff"
+    },
+    {
+      "name": "plaza",
+      "tipo": "lugar",
+      "nivel": 7,
+      "color": "#3333dd"
+    },
+    {
+      "name": "parque",
+      "tipo": "lugar",
+      "nivel": 7,
+      "color": "#3333dd"
+    },
+    {
+      "name": "escuela",
+      "tipo": "lugar",
+      "nivel": 7,
+      "color": "#3333dd"
+    },
+    {
+      "name": "calle",
+      "tipo": "lugar",
+      "nivel": 8,
+      "color": "#2222cc"
+    },
+    {
+      "name": "cine",
+      "tipo": "lugar",
+      "nivel": 8,
+      "color": "#2222cc"
+    },
+    {
+      "name": "café",
+      "tipo": "lugar",
+      "nivel": 8,
+      "color": "#2222cc"
+    },
+    {
+      "name": "coche",
+      "tipo": "lugar",
+      "nivel": 9,
+      "color": "#0000ff"
+    },
+    {
+      "name": "camión",
+      "tipo": "lugar",
+      "nivel": 9,
+      "color": "#0000ff"
+    }
+  ],
+  "links": [
+    {
+      "source": 0,
+      "target": 13,
+      "value": 241
+    },
+    {
+      "source": 6,
+      "target": 13,
+      "value": 17
+    },
+    {
+      "source": 1,
+      "target": 13,
+      "value": 221
+    },
+    {
+      "source": 3,
+      "target": 13,
+      "value": 28
+    },
+    {
+      "source": 2,
+      "target": 13,
+      "value": 33
+    },
+    {
+      "source": 10,
+      "target": 13,
+      "value": 13
+    },
+    {
+      "source": 12,
+      "target": 13,
+      "value": 1
+    },
+    {
+      "source": 4,
+      "target": 13,
+      "value": 43
+    },
+    {
+      "source": 11,
+      "target": 13,
+      "value": 6
+    },
+    {
+      "source": 9,
+      "target": 13,
+      "value": 13
+    },
+    {
+      "source": 8,
+      "target": 13,
+      "value": 14
+    },
+    {
+      "source": 7,
+      "target": 13,
+      "value": 15
+    },
+    {
+      "source": 5,
+      "target": 13,
+      "value": 30
+    },
+    {
+      "source": 6,
+      "target": 14,
+      "value": 14
+    },
+    {
+      "source": 1,
+      "target": 14,
+      "value": 99
+    },
+    {
+      "source": 0,
+      "target": 14,
+      "value": 202
+    },
+    {
+      "source": 12,
+      "target": 14,
+      "value": 7
+    },
+    {
+      "source": 2,
+      "target": 14,
+      "value": 16
+    },
+    {
+      "source": 9,
+      "target": 14,
+      "value": 6
+    },
+    {
+      "source": 3,
+      "target": 14,
+      "value": 23
+    },
+    {
+      "source": 10,
+      "target": 14,
+      "value": 3
+    },
+    {
+      "source": 8,
+      "target": 14,
+      "value": 14
+    },
+    {
+      "source": 4,
+      "target": 14,
+      "value": 5
+    },
+    {
+      "source": 7,
+      "target": 14,
+      "value": 11
+    },
+    {
+      "source": 5,
+      "target": 14,
+      "value": 10
+    },
+    {
+      "source": 11,
+      "target": 14,
+      "value": 6
+    },
+    {
+      "source": 2,
+      "target": 15,
+      "value": 7
+    },
+    {
+      "source": 0,
+      "target": 15,
+      "value": 58
+    },
+    {
+      "source": 6,
+      "target": 15,
+      "value": 9
+    },
+    {
+      "source": 1,
+      "target": 15,
+      "value": 23
+    },
+    {
+      "source": 4,
+      "target": 15,
+      "value": 7
+    },
+    {
+      "source": 3,
+      "target": 15,
+      "value": 7
+    },
+    {
+      "source": 7,
+      "target": 15,
+      "value": 9
+    },
+    {
+      "source": 5,
+      "target": 15,
+      "value": 5
+    },
+    {
+      "source": 12,
+      "target": 15,
+      "value": 3
+    },
+    {
+      "source": 9,
+      "target": 15,
+      "value": 2
+    },
+    {
+      "source": 8,
+      "target": 15,
+      "value": 1
+    },
+    {
+      "source": 13,
+      "target": 27,
+      "value": 162
+    },
+    {
+      "source": 13,
+      "target": 28,
+      "value": 105
+    },
+    {
+      "source": 13,
+      "target": 29,
+      "value": 23
+    },
+    {
+      "source": 13,
+      "target": 30,
+      "value": 22
+    },
+    {
+      "source": 13,
+      "target": 18,
+      "value": 59
+    },
+    {
+      "source": 13,
+      "target": 23,
+      "value": 42
+    },
+    {
+      "source": 13,
+      "target": 24,
+      "value": 11
+    },
+    {
+      "source": 13,
+      "target": 19,
+      "value": 12
+    },
+    {
+      "source": 13,
+      "target": 25,
+      "value": 91
+    },
+    {
+      "source": 13,
+      "target": 26,
+      "value": 57
+    },
+    {
+      "source": 13,
+      "target": 21,
+      "value": 21
+    },
+    {
+      "source": 14,
+      "target": 31,
+      "value": 144
+    },
+    {
+      "source": 13,
+      "target": 20,
+      "value": 12
+    },
+    {
+      "source": 13,
+      "target": 22,
+      "value": 24
+    },
+    {
+      "source": 13,
+      "target": 16,
+      "value": 23
+    },
+    {
+      "source": 13,
+      "target": 17,
+      "value": 11
+    },
+    {
+      "source": 14,
+      "target": 35,
+      "value": 120
+    },
+    {
+      "source": 14,
+      "target": 34,
+      "value": 52
+    },
+    {
+      "source": 14,
+      "target": 32,
+      "value": 21
+    },
+    {
+      "source": 14,
+      "target": 33,
+      "value": 11
+    },
+    {
+      "source": 14,
+      "target": 37,
+      "value": 44
+    },
+    {
+      "source": 14,
+      "target": 36,
+      "value": 24
+    },
+    {
+      "source": 15,
+      "target": 38,
+      "value": 67
+    },
+    {
+      "source": 15,
+      "target": 39,
+      "value": 64
+    }
+  ]
+}

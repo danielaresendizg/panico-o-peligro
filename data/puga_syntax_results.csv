@@ -1,0 +1,64 @@
+ruta_id,ruta_nombre,personajes,etapa_vida,medio_transporte,waypoint_orden,waypoint_lugar,waypoint_tipo,latitud,longitud,dist_segmento_m,NAINr500m,NAINr1500m,NAINr5000m,NACHr500m,NACHr1500m,NACHr5000m,Ta_mean,UHI_mean
+1,Ruta de la infancia — El canalito de Susana,"Susana, Padre, Madre",Infancia (primaria),"camion, a_pie",1,Apartamento calle Jalapa,origen/vivienda,19.4117,-99.1596,10.5,1.37,1.46,1.63,1.19,1.14,1.11,25.77,0.61
+1,Ruta de la infancia — El canalito de Susana,"Susana, Padre, Madre",Infancia (primaria),"camion, a_pie",2,Parada de camion (Jalapa),transporte,19.4115,-99.1592,32.6,1.83,2.03,1.96,1.16,1.23,1.25,25.56,0.55
+1,Ruta de la infancia — El canalito de Susana,"Susana, Padre, Madre",Infancia (primaria),"camion, a_pie",3,Escuela primaria (colonia Roma),destino,19.415,-99.161,36.8,1.7,1.94,2.07,0.96,1.17,1.2,26.5,0.8
+1,Ruta de la infancia — El canalito de Susana,"Susana, Padre, Madre",Infancia (primaria),"camion, a_pie",4,Plaza Miravalle,recreacion,19.4202,-99.1662,23.0,1.15,1.21,1.35,0.9,0.74,0.75,25.5,0.54
+1,Ruta de la infancia — El canalito de Susana,"Susana, Padre, Madre",Infancia (primaria),"camion, a_pie",5,Cine colonia Roma,recreacion,19.417,-99.1615,8.7,1.64,1.73,2.05,0.93,1.08,1.13,26.33,0.76
+1,Ruta de la infancia — El canalito de Susana,"Susana, Padre, Madre",Infancia (primaria),"camion, a_pie",6,Casa de Lourdes (Alvaro Obregon),social,19.4171,-99.1662,6.1,1.62,1.87,1.81,1.03,1.21,1.14,25.85,0.63
+1,Ruta de la infancia — El canalito de Susana,"Susana, Padre, Madre",Infancia (primaria),"camion, a_pie",7,Casa de Socorro (calle Ixtlan),social,19.4069,-99.1577,44.3,1.31,1.53,1.75,1.0,1.0,0.96,26.38,0.77
+1,Ruta de la infancia — El canalito de Susana,"Susana, Padre, Madre",Infancia (primaria),"camion, a_pie",8,Plaza Rio de Janeiro,recreacion,19.4217,-99.1606,0.0,1.24,1.59,1.65,1.12,1.05,0.96,26.24,0.73
+2,Ruta del paseo dominical — El Plymouth del padre,"Susana, Padre, Madre",Infancia,coche,1,Apartamento calle Jalapa,origen,19.4117,-99.1596,10.5,1.37,1.46,1.63,1.19,1.14,1.11,25.77,0.61
+2,Ruta del paseo dominical — El Plymouth del padre,"Susana, Padre, Madre",Infancia,coche,2,Calles de la colonia Roma (jacarandas),paseo,19.416,-99.162,14.4,2.02,1.99,1.98,1.14,1.26,1.26,26.4,0.78
+2,Ruta del paseo dominical — El Plymouth del padre,"Susana, Padre, Madre",Infancia,coche,3,Plaza Rio de Janeiro (sueno del padre),destino_simbolico,19.4217,-99.1606,0.0,1.24,1.59,1.65,1.12,1.05,0.96,26.24,0.73
+2,Ruta del paseo dominical — El Plymouth del padre,"Susana, Padre, Madre",Infancia,coche,4,Esquina desconocida (agua fresca),parada,19.419,-99.161,14.1,1.42,1.54,1.6,1.02,1.13,1.04,26.39,0.77
+3,Ruta del primer trabajo — Zona Rosa,"Susana, Padre",Adolescencia/juventud,"a_pie, camion",1,Apartamento calle Jalapa,origen,19.4117,-99.1596,10.5,1.37,1.46,1.63,1.19,1.14,1.11,25.77,0.61
+3,Ruta del primer trabajo — Zona Rosa,"Susana, Padre",Adolescencia/juventud,"a_pie, camion",2,Sears (compra ropa formal),preparacion,19.4171,-99.17,47.1,1.73,1.55,1.91,1.11,1.17,1.3,26.04,0.68
+3,Ruta del primer trabajo — Zona Rosa,"Susana, Padre",Adolescencia/juventud,"a_pie, camion",3,Zona Rosa (oficina),destino/trabajo,19.4249,-99.1641,51.3,1.5,1.75,1.8,0.99,1.24,1.26,26.8,0.89
+4,Ruta del origen — El tren a San Blas,"Susana, Madre",Juventud,tren,1,Apartamento calle Jalapa,origen,19.4117,-99.1596,10.5,1.37,1.46,1.63,1.19,1.14,1.11,25.77,0.61
+4,Ruta del origen — El tren a San Blas,"Susana, Madre",Juventud,tren,2,Estacion de tren CDMX,transporte,19.4498,-99.1531,20.0,1.46,1.55,1.91,0.83,1.0,1.14,26.88,0.91
+5,Ruta con Arturo — Caminar la ciudad criticamente,"Susana, Arturo",Juventud,"a_pie, camion, metro",1,Apartamento calle Zacatecas,origen,19.4164,-99.1567,2.2,1.74,2.07,2.15,1.05,1.18,1.2,26.47,0.8
+5,Ruta con Arturo — Caminar la ciudad criticamente,"Susana, Arturo",Juventud,"a_pie, camion, metro",2,Camellon (conversaciones nocturnas),pausa,19.4171,-99.1662,6.1,1.62,1.87,1.81,1.03,1.21,1.14,25.85,0.63
+5,Ruta con Arturo — Caminar la ciudad criticamente,"Susana, Arturo",Juventud,"a_pie, camion, metro",3,Sede del partido (colonia Roma),destino,19.4155,-99.161,0.0,1.85,1.9,2.06,1.0,1.18,1.18,26.58,0.83
+5,Ruta con Arturo — Caminar la ciudad criticamente,"Susana, Arturo",Juventud,"a_pie, camion, metro",4,Casa de companero (otro lado de la ciudad),destino,19.35,-99.12,10.5,1.17,1.33,1.43,1.08,1.25,1.21,26.04,0.68
+5,Ruta con Arturo — Caminar la ciudad criticamente,"Susana, Arturo",Juventud,"a_pie, camion, metro",5,Parada de camion (cualquier esquina),transporte,19.415,-99.17,41.4,1.29,1.45,1.45,0.95,1.07,0.98,23.71,0.06
+5,Ruta con Arturo — Caminar la ciudad criticamente,"Susana, Arturo",Juventud,"a_pie, camion, metro",6,Estacion de metro,transporte,19.4264,-99.1691,4.5,1.41,1.36,1.43,1.18,1.1,1.01,24.32,0.22
+5,Ruta con Arturo — Caminar la ciudad criticamente,"Susana, Arturo",Juventud,"a_pie, camion, metro",7,Lado opuesto de la ciudad (replicas de calles),destino,19.48,-99.11,21.4,1.6,1.69,1.76,1.03,1.19,1.27,28.93,1.46
+5,Ruta con Arturo — Caminar la ciudad criticamente,"Susana, Arturo",Juventud,"a_pie, camion, metro",8,Restorancito chiquito,pausa,19.4145,-99.1605,28.1,1.71,1.76,1.8,1.1,1.19,1.14,25.81,0.62
+6,Ruta del segundo trabajo — Colonia del Valle / Ameyalco,Susana,Juventud/adulta,"camion, a_pie",1,Apartamento calle Zacatecas,origen,19.4164,-99.1567,2.2,1.74,2.07,2.15,1.05,1.18,1.2,26.47,0.8
+6,Ruta del segundo trabajo — Colonia del Valle / Ameyalco,Susana,Juventud/adulta,"camion, a_pie",2,Insurgentes Sur (recorrido a pie),transito,19.4,-99.175,3.6,1.53,1.7,1.63,0.84,1.14,1.07,25.84,0.63
+6,Ruta del segundo trabajo — Colonia del Valle / Ameyalco,Susana,Juventud/adulta,"camion, a_pie",3,Concepcion Beistegui (se baja por error),error,19.3867,-99.1532,14.1,1.93,2.39,2.28,1.19,1.29,1.34,26.14,0.71
+6,Ruta del segundo trabajo — Colonia del Valle / Ameyalco,Susana,Juventud/adulta,"camion, a_pie",4,Colonia del Valle (zona residencial hostil),transito,19.3942,-99.167,1.6,1.85,2.05,1.9,1.12,1.22,1.18,25.97,0.66
+6,Ruta del segundo trabajo — Colonia del Valle / Ameyalco,Susana,Juventud/adulta,"camion, a_pie",5,Esquina Ameyalco y Av. Magdalena,destino/trabajo,19.3387,-99.1912,86.8,1.35,1.22,1.34,1.06,1.21,1.29,25.63,0.57
+7,Ruta del tercer trabajo — El pesero a colonia Ajusco,Susana,Adulta,pesero,1,Nuevo apartamento (sur),origen,19.35,-99.175,52.5,1.53,1.3,1.3,1.17,1.23,1.16,24.88,0.37
+7,Ruta del tercer trabajo — El pesero a colonia Ajusco,Susana,Adulta,pesero,2,Ruta del pesero (colonia rica que protesta),transito,19.34,-99.17,102.9,1.3,1.04,1.09,1.15,1.18,1.19,24.67,0.31
+7,Ruta del tercer trabajo — El pesero a colonia Ajusco,Susana,Adulta,pesero,3,Colonia Ajusco (oficina),destino/trabajo,19.3191,-99.161,4.3,1.48,1.49,1.02,0.82,1.07,1.06,26.11,0.7
+8,Ruta de Insurgentes — La columna vertebral,Susana,Todas,"camion, a_pie, pesero",1,Insurgentes Norte,extremo,19.4513,-99.152,39.2,1.77,1.87,2.16,1.1,1.19,1.31,27.09,0.96
+8,Ruta de Insurgentes — La columna vertebral,Susana,Todas,"camion, a_pie, pesero",2,Insurgentes / Reforma,cruce,19.4264,-99.1691,4.5,1.41,1.36,1.43,1.18,1.1,1.01,24.32,0.22
+8,Ruta de Insurgentes — La columna vertebral,Susana,Todas,"camion, a_pie, pesero",3,Insurgentes / Zona Rosa,hito,19.4249,-99.1688,34.3,0.91,1.16,1.31,0.0,0.0,0.0,24.76,0.34
+8,Ruta de Insurgentes — La columna vertebral,Susana,Todas,"camion, a_pie, pesero",4,Insurgentes / Alvaro Obregon,cruce,19.4171,-99.17,47.1,1.73,1.55,1.91,1.11,1.17,1.3,26.04,0.68
+8,Ruta de Insurgentes — La columna vertebral,Susana,Todas,"camion, a_pie, pesero",5,Insurgentes / Colonia Roma,hito,19.4117,-99.172,27.4,1.6,1.84,1.72,1.1,1.29,1.24,24.6,0.3
+8,Ruta de Insurgentes — La columna vertebral,Susana,Todas,"camion, a_pie, pesero",6,Insurgentes Sur / CU-UNAM,extremo,19.3216,-99.1849,356.2,1.76,1.13,1.42,0.0,1.25,1.29,23.0,-0.13
+9,Ruta de Lourdes y Claude — Caminatas nocturnas,"Susana, Lourdes, Claude",Adulta,a_pie,1,Apartamento calle Zacatecas,origen,19.4164,-99.1567,2.2,1.74,2.07,2.15,1.05,1.18,1.2,26.47,0.8
+9,Ruta de Lourdes y Claude — Caminatas nocturnas,"Susana, Lourdes, Claude",Adulta,a_pie,2,Calles desconocidas colonia Roma (noche),transito,19.4155,-99.163,43.3,1.87,1.89,2.03,1.02,1.18,1.18,26.63,0.84
+9,Ruta de Lourdes y Claude — Caminatas nocturnas,"Susana, Lourdes, Claude",Adulta,a_pie,3,Casa/apartamento de Claude,destino,19.4145,-99.165,25.5,1.66,1.83,1.9,1.1,1.14,1.16,25.91,0.65
+9,Ruta de Lourdes y Claude — Caminatas nocturnas,"Susana, Lourdes, Claude",Adulta,a_pie,4,Reunion politica (lugar desconocido),destino,19.413,-99.1605,29.4,1.83,1.97,2.01,1.16,1.25,1.25,25.88,0.64
+10,Ruta del camion — Todos somos lo mismo,Susana,Todas,camion,1,Parada de camion (cualquiera),origen,19.4117,-99.1596,10.5,1.37,1.46,1.63,1.19,1.14,1.11,25.77,0.61
+10,Ruta del camion — Todos somos lo mismo,Susana,Todas,camion,2,Interior del camion (espacio social),transito,19.412,-99.168,9.1,1.36,1.53,1.67,0.98,0.99,1.0,24.22,0.19
+10,Ruta del camion — Todos somos lo mismo,Susana,Todas,camion,3,Destino (trabajo/casa/escuela),destino,19.38,-99.175,18.7,1.66,1.76,1.67,1.16,1.27,1.23,25.84,0.63
+11,Ruta de Socorro — Europa y la fuga,Socorro,Adulta,"avion, autobus",1,Apartamento Col. Cuauhtemoc / Rio Po,origen,19.4302,-99.1685,0.0,1.73,1.58,1.61,1.17,1.14,1.14,25.8,0.62
+11,Ruta de Socorro — Europa y la fuga,Socorro,Adulta,"avion, autobus",3,Regreso a CDMX,retorno,19.4326,-99.1332,80.0,1.62,2.04,1.88,1.09,1.23,1.19,28.23,1.27
+11,Ruta de Socorro — Europa y la fuga,Socorro,Adulta,"avion, autobus",4,Terminal de autobuses,transporte,19.4429,-99.1197,14.6,1.66,1.89,1.84,0.98,1.15,1.04,27.7,1.13
+12,Ruta de Ramiro — Cuernavaca y el parque,"Susana, Ramiro",Adulta,coche,1,Apartamento nuevo (Lourdes-Claude-Susana),origen,19.35,-99.175,52.5,1.53,1.3,1.3,1.17,1.23,1.16,24.88,0.37
+12,Ruta de Ramiro — Cuernavaca y el parque,"Susana, Ramiro",Adulta,coche,2,Calles de CDMX en coche,transito,19.41,-99.17,30.0,1.26,1.48,1.53,1.0,1.06,0.93,23.63,0.04
+12,Ruta de Ramiro — Cuernavaca y el parque,"Susana, Ramiro",Adulta,coche,3,Parque (paseos dominicales),recreacion,19.358,-99.185,42.4,1.43,1.35,1.44,1.06,1.11,1.06,24.75,0.34
+12,Ruta de Ramiro — Cuernavaca y el parque,"Susana, Ramiro",Adulta,coche,4,Carretera a Cuernavaca,transito,19.15,-99.2,2378.7,1.37,1.17,1.04,0.67,0.77,0.77,20.15,-0.9
+13,Ruta del padre migrante — Provincia a CDMX,"Padre, Madre",Pre-Susana,"tren, camion",4,Ciudad de Mexico (destino),destino,19.4326,-99.1332,80.0,1.62,2.04,1.88,1.09,1.23,1.19,28.23,1.27
+13,Ruta del padre migrante — Provincia a CDMX,"Padre, Madre",Pre-Susana,"tren, camion",5,Apartamento calle Jalapa (hogar),destino_final,19.4117,-99.1596,10.5,1.37,1.46,1.63,1.19,1.14,1.11,25.77,0.61
+14,Ruta de la mudanza — Zacatecas a lo desconocido,"Susana, Lourdes, Claude",Adulta,"camion_mudanza, coche",1,Apartamento calle Zacatecas,origen,19.4164,-99.1567,2.2,1.74,2.07,2.15,1.05,1.18,1.2,26.47,0.8
+14,Ruta de la mudanza — Zacatecas a lo desconocido,"Susana, Lourdes, Claude",Adulta,"camion_mudanza, coche",2,Comida (pausa),pausa,19.4155,-99.162,4.1,2.02,1.99,1.98,1.14,1.26,1.26,26.4,0.78
+14,Ruta de la mudanza — Zacatecas a lo desconocido,"Susana, Lourdes, Claude",Adulta,"camion_mudanza, coche",3,Nuevo apartamento (sur de la ciudad),destino,19.35,-99.175,52.5,1.53,1.3,1.3,1.17,1.23,1.16,24.88,0.37
+15,Ruta de Ramiro joven — Zona Rosa en coche,Ramiro,Juventud de Ramiro,coche,1,Casa de Ramiro (Pedregal/sur),origen,19.315,-99.192,413.3,0.78,1.1,1.22,0.53,0.99,1.09,23.44,-0.02
+15,Ruta de Ramiro joven — Zona Rosa en coche,Ramiro,Juventud de Ramiro,coche,2,Calles de la Zona Rosa,recorrido,19.4249,-99.1641,51.3,1.5,1.75,1.8,0.99,1.24,1.26,26.8,0.89
+15,Ruta de Ramiro joven — Zona Rosa en coche,Ramiro,Juventud de Ramiro,coche,3,Cines,destino,19.4248,-99.1645,36.1,1.43,1.5,1.54,1.12,1.13,1.0,26.83,0.89
+16,Ruta de la ventana — Sin moverse,"Susana, Lourdes",Todas,ninguno,1,Ventana del apartamento (Zacatecas/Jalapa),origen_fijo,19.414,-99.158,41.6,1.62,1.99,2.12,0.92,1.13,1.2,26.31,0.75
+16,Ruta de la ventana — Sin moverse,"Susana, Lourdes",Todas,ninguno,2,La ciudad vista desde arriba/adentro,destino_visual,19.4326,-99.1332,80.0,1.62,2.04,1.88,1.09,1.23,1.19,28.23,1.27

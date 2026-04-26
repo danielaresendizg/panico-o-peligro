@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pánico o Peligro — Redes de personajes</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#000005;--electro:rgba(255,255,255,.9);--blanco:#f5f5f5;
+  --muted:rgba(255,255,255,.35);--line:#0d0d14;
+  --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-family:var(--sans);overflow:hidden}
+#pc{position:fixed;inset:0;pointer-events:none;z-index:0}
+
+#panel{
+  position:fixed;top:0;left:0;width:260px;height:100%;
+  background:rgba(0,0,5,.96);border-right:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;z-index:10;
+}
+.ph{padding:18px 20px 12px;border-bottom:1px solid rgba(255,255,255,.05)}
+.ph .ey{font-size:.57rem;color:var(--electro);letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px;font-weight:700}
+.ph h1{font-size:1.4rem;font-style:italic;font-family:var(--serif);color:#fff;line-height:1.2;margin-bottom:3px;letter-spacing:-.01em}
+.ph .sub{font-size:.64rem;color:var(--muted);font-style:italic;font-family:var(--serif)}
+.ph .sub em{color:#fff;font-style:italic}
+
+.tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.05)}
+.tab{flex:1;padding:9px 4px;text-align:center;font-size:.6rem;color:var(--muted);
+  cursor:pointer;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+  border-bottom:2px solid transparent;transition:all 180ms}
+.tab:hover{color:var(--blanco)}
+.tab.active{color:#fff;border-bottom-color:#fff}
+
+.tab-c{display:none;flex:1;overflow-y:auto;flex-direction:column;padding:16px 20px;min-height:0}
+.tab-c.active{display:flex}
+.tab-c::-webkit-scrollbar{width:2px}
+.tab-c::-webkit-scrollbar-thumb{background:#222}
+
+.sec{font-size:.57rem;color:var(--electro);letter-spacing:.14em;text-transform:uppercase;
+  margin-bottom:6px;margin-top:12px;font-weight:700}
+.sec:first-child{margin-top:0}
+.desc{font-size:.7rem;color:var(--muted);line-height:1.65;margin-bottom:10px}
+
+.pers-ley{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.pers-ley-i{display:flex;align-items:center;gap:8px;font-size:.68rem;color:var(--blanco);
+  cursor:pointer;padding:3px 6px;border-radius:2px;transition:background 150ms}
+.pers-ley-i:hover{background:rgba(255,255,255,.04)}
+.pers-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+#info{padding:14px 20px;border-top:1px solid rgba(255,255,255,.04);
+  font-size:.7rem;color:var(--muted);line-height:1.6;min-height:80px;max-height:180px;overflow-y:auto}
+#info .it{font-size:.88rem;font-weight:700;color:var(--blanco);margin-bottom:3px}
+#info .im{font-size:.66rem;color:var(--muted);margin-bottom:4px}
+#info .ic{font-style:italic;border-left:2px solid #fff;padding-left:8px;
+  margin-top:6px;font-size:.7rem;line-height:1.6;color:#ccc}
+
+#canvas{position:fixed;left:260px;top:0;right:0;bottom:0;z-index:1;overflow:visible}
+#titulo{position:fixed;top:14px;left:278px;font-size:.68rem;color:rgba(255,255,255,.3);
+  letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+
+#tt{position:fixed;display:none;max-width:240px;
+  background:rgba(0,0,5,.97);border-left:3px solid #fff;
+  padding:10px 13px;font-size:.72rem;color:var(--blanco);
+  line-height:1.6;z-index:50;pointer-events:none}
+#tt b{color:#fff;font-weight:700}
+#tt small{color:var(--muted);font-size:.64rem;display:block;margin-top:2px}
+
+#volver{position:fixed;bottom:14px;right:14px;background:rgba(0,0,5,.9);
+  border:1px solid rgba(255,255,255,.1);padding:7px 13px;font-size:.67rem;
+  color:var(--muted);cursor:pointer;z-index:20;transition:color 150ms;font-family:var(--sans)}
+#volver:hover{color:var(--blanco)}
+
+.modo-btn{display:inline-block;padding:4px 10px;border-radius:10px;font-size:.62rem;
+  cursor:pointer;border:1px solid rgba(255,255,255,.1);color:var(--muted);
+  margin-right:5px;margin-bottom:6px;transition:all 150ms;font-family:var(--sans);font-weight:700}
+.modo-btn.active{border-color:rgba(255,255,255,.4);color:#fff}
+
+#chip-entrada{
+  padding:14px 20px;border-top:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;
+}
+#chip-entrada a{
+  font-family:var(--serif);font-style:italic;font-size:.85rem;
+  color:rgba(255,255,255,.55);text-decoration:none;
+  border:1px solid rgba(255,255,255,.15);
+  padding:7px 18px;border-radius:20px;
+  transition:all 200ms;letter-spacing:.02em;
+}
+#chip-entrada a:hover{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.04)}
+
+/* ── INTRO REDES ── */
+#intro-r{
+  position:fixed;inset:0;z-index:200;background:#000005;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity 600ms;
+}
+#intro-r.oculto{opacity:0;pointer-events:none}
+#intro-r canvas{position:absolute;inset:0;width:100%;height:100%}
+#intro-r-box{
+  position:relative;z-index:1;
+  max-width:480px;padding:0 32px;
+  display:flex;flex-direction:column;gap:24px;
+}
+#intro-r-box h2{
+  font-family:Georgia,"Times New Roman",serif;font-style:italic;
+  font-size:1.5rem;color:#fff;line-height:1.25;
+}
+#intro-r-box .bloque{
+  font-family:Georgia,"Times New Roman",serif;font-style:italic;
+  font-size:.82rem;color:rgba(255,255,255,.72);line-height:1.8;
+}
+#intro-r-box .bloque strong{color:rgba(255,255,255,.92);font-weight:normal}
+#intro-r-box .diags{
+  display:flex;flex-direction:column;gap:12px;
+}
+#intro-r-box .diag{
+  font-family:Georgia,"Times New Roman",serif;font-style:italic;
+  font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.7;
+  padding-left:14px;border-left:1px solid rgba(255,255,255,.15);
+}
+#intro-r-box .diag strong{color:rgba(255,255,255,.9);font-weight:normal;}
+#intro-r-entrar{
+  align-self:flex-start;
+  font-family:Georgia,"Times New Roman",serif;font-style:italic;
+  font-size:.9rem;color:rgba(255,255,255,.6);
+  border:1px solid rgba(255,255,255,.2);
+  padding:9px 24px;border-radius:20px;cursor:pointer;
+  background:none;transition:all 220ms;letter-spacing:.03em;
+}
+#intro-r-entrar:hover{color:#fff;border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.05)}
+</style>
+</head>
+<body>
+<div id="intro-r">
+  <canvas id="intro-r-bg"></canvas>
+  <div id="intro-r-box">
+    <h2>Tres diagramas, una pregunta.</h2>
+    <div class="bloque">El mismo corpus — personajes y espacios de <em>Pánico o peligro</em> — leído desde tres ángulos distintos. Cada diagrama revela algo que los otros no pueden mostrar.</div>
+    <div class="diags">
+      <div class="diag"><strong>Chord.</strong> ¿Con quién comparte espacio cada personaje? Muestra co-presencia como red de vínculos: dos personajes conectados si coinciden en el mismo lugar. Revela quién está en el centro y quién opera en los márgenes.</div>
+      <div class="diag"><strong>Sankey.</strong> ¿Qué tipos de espacio domina cada personaje? El flujo va de persona a categoría a lugar concreto. Revela si un personaje vive en lo íntimo, lo doméstico o lo público — y con qué intensidad.</div>
+      <div class="diag"><strong>Radial.</strong> ¿Cuál es la red de un nodo específico? Grafo bipartito centrado: elige un personaje o un espacio y ve sus relaciones directas. El tamaño del círculo es peso acumulado de co-ocurrencias.</div>
+    </div>
+    <button id="intro-r-entrar" onclick="cerrarIntroR()">Explorar.</button>
+  </div>
+</div>
+<canvas id="pc"></canvas>
+
+<div id="panel">
+  <div class="ph">
+    <div class="ey">Análisis de redes</div>
+    <h1>Pánico o Peligro.</h1>
+    <div class="sub"><em>Pánico o peligro</em>, Puga 1983</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="cambiarVista('chord')">Chord</div>
+    <div class="tab"        onclick="cambiarVista('sankey')">Sankey</div>
+    <div class="tab"        onclick="cambiarVista('radial')">Radial</div>
+  </div>
+
+  <div class="tab-c active" id="tab-chord">
+    <div class="sec">Diagrama de cuerdas</div>
+    <div class="desc">Visualiza relaciones de co-presencia: dos personajes están conectados si coinciden en el mismo espacio. El grosor del arco es proporcional al número de co-ocurrencias. En teoría de redes sociales esto mide <em>proximidad espacial</em> como proxy de vínculo.</div>
+    <div class="sec">Cómo leerlo</div>
+    <div class="desc">El segmento más grande es Susana — nodo con mayor grado de centralidad. Los arcos más gruesos revelan las díadas espacialmente más densas. Personajes con arcos débiles o ausentes operan en esferas separadas.</div>
+    <div class="sec">Personajes</div>
+    <div class="pers-ley" id="pers-ley-chord"></div>
+  </div>
+
+  <div class="tab-c" id="tab-sankey">
+    <div class="sec">Diagrama de Sankey</div>
+    <div class="desc">Representa flujos jerárquicos: de personaje → categoría de espacio → lugar concreto. El ancho de cada flujo es proporcional a la frecuencia de aparición. Revela qué tipos de espacio domina cada personaje y cómo se distribuye su presencia narrativa.</div>
+    <div class="sec">Escala de intimidad</div>
+    <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:.66rem;color:var(--blanco)"><div style="width:8px;height:8px;background:#ffffff;border-radius:1px;flex-shrink:0"></div>0 · cuerpo / íntimo</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.66rem;color:var(--blanco)"><div style="width:8px;height:8px;background:#ddddff;border-radius:1px;flex-shrink:0"></div>1 · habitación privada</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.66rem;color:var(--blanco)"><div style="width:8px;height:8px;background:#bbbbff;border-radius:1px;flex-shrink:0"></div>2 · doméstico compartido</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.66rem;color:var(--blanco)"><div style="width:8px;height:8px;background:#9999ff;border-radius:1px;flex-shrink:0"></div>3 · ventana — umbral</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.66rem;color:var(--blanco)"><div style="width:8px;height:8px;background:#7777ff;border-radius:1px;flex-shrink:0"></div>4 · umbral construido</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.66rem;color:var(--blanco)"><div style="width:8px;height:8px;background:#5555ff;border-radius:1px;flex-shrink:0"></div>5 · la vivienda</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.66rem;color:var(--blanco)"><div style="width:8px;height:8px;background:#4444ee;border-radius:1px;flex-shrink:0"></div>6 · calle barrial</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.66rem;color:var(--blanco)"><div style="width:8px;height:8px;background:#3333dd;border-radius:1px;flex-shrink:0"></div>7 · espacio barrial</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.66rem;color:var(--blanco)"><div style="width:8px;height:8px;background:#2222cc;border-radius:1px;flex-shrink:0"></div>8 · avenida / ciudad</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.66rem;color:var(--blanco)"><div style="width:8px;height:8px;background:#0000ff;border-radius:1px;flex-shrink:0"></div>9 · transporte móvil</div>
+    </div>
+  </div>
+
+  <div class="tab-c" id="tab-radial">
+    <div class="sec">Grafo bipartito</div>
+    <div class="desc">Red de dos tipos de nodos — personajes y espacios — donde los enlaces solo conectan tipos distintos. El tamaño de cada nodo es proporcional al peso acumulado de sus relaciones. Permite identificar <em>centralidad de grado</em>: qué personajes frecuentan más espacios y qué espacios concentran más presencias.</div>
+    <div class="sec">Modo</div>
+    <div style="margin-bottom:10px">
+      <span class="modo-btn active" id="modo-pers" onclick="setModoRadial('personaje')">Personaje → Lugares</span>
+      <span class="modo-btn" id="modo-lugar" onclick="setModoRadial('lugar')">Lugar → Personajes</span>
+    </div>
+    <div class="desc" id="desc-radial">Clic en cualquier nodo para centrar su red.</div>
+    <div class="sec">Referencias</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:.68rem;color:#fff">
+        <div style="width:10px;height:10px;background:#ffffff;border-radius:50%"></div>Nodo principal</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.68rem;color:rgba(100,140,255,.9)">
+        <div style="width:10px;height:10px;background:#0000ff;border-radius:50%"></div>Nodo relacionado</div>
+    </div>
+
+    <!-- Panel modo pers→lugares -->
+    <div id="panel-pers-lugares">
+      <div class="sec" style="margin-top:14px">Personajes</div>
+      <div class="pers-ley" id="pers-ley-radial"></div>
+    </div>
+
+    <!-- Panel modo lugar→pers -->
+    <div id="panel-lugar-pers" style="display:none">
+      <div id="cat-lista"></div>
+    </div>
+  </div>
+
+  <div id="info"><div style="color:var(--muted);font-size:.7rem">Haz clic para ver detalles.</div></div>
+  <div id="chip-entrada"><a href="entrada.html">Pánico o Peligro.</a></div>
+</div>
+
+<div id="canvas"></div>
+<div id="titulo"></div>
+<div id="tt"></div>
+<div id="volver" onclick="window.close()">← Volver al mapa</div>
+
+<script>
+// ── PARTÍCULAS ───────────────────────────────────────────────────────────────
+const pc=document.getElementById('pc');
+const pctx=pc.getContext('2d');
+function resPC(){pc.width=window.innerWidth;pc.height=window.innerHeight;}
+resPC();window.addEventListener('resize',()=>{resPC();renderVista();});
+const parts=Array.from({length:50},()=>({
+  x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,
+  s:Math.random()*.8+.1,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,
+  life:Math.random(),ml:Math.random()*.012+.002,
+  col:['rgba(255,255,255,','rgba(0,212,255,'][Math.floor(Math.random()*2)]
+}));
+function animPC(){
+  pctx.clearRect(0,0,pc.width,pc.height);
+  parts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.life+=p.ml;
+    const op=p.life<.5?p.life*2:(1-p.life)*2;
+    if(p.life>=1){p.life=0;p.x=Math.random()*pc.width;p.y=Math.random()*pc.height;}
+    pctx.beginPath();pctx.arc(p.x,p.y,p.s,0,Math.PI*2);
+    pctx.fillStyle=p.col+(op*.1)+')';pctx.fill();
+  });
+  requestAnimationFrame(animPC);
+}
+animPC();
+
+// ── PALETAS ──────────────────────────────────────────────────────────────────
+// 13 tonos de #0000ff → #ffffff distribuidos uniformemente
+const PERS_COLOR={
+  'Susana (narradora)':'#ffffff',
+  'Lourdes':           '#d5d5ff',
+  'Madre de Susana':   '#aaaaff',
+  'Socorro':           '#8080ff',
+  'Claude':            '#6666ff',
+  'Ramiro':            '#4d4dff',
+  'Padre de Susana':   '#3333ff',
+  'Arturo':            '#2222ee',
+  'María Laura':       '#1a1add',
+  'Mateo':             '#1111cc',
+  'Lola':              '#0a0abb',
+  'Fermín':            '#0505aa',
+  'González':          '#0000ff',
+};
+const CAT_COLOR={
+  'Espacio doméstico':'#ffffff',
+  'Espacio público':  '#8080ff',
+  'Transporte':       '#0000ff',
+};
+
+// ── DATOS ────────────────────────────────────────────────────────────────────
+let DATA={}, vistaActiva='chord', modoRadial='personaje', persSeleccionado=null;
+
+async function cargar(){
+  const[chord,sankey,bip,res]=await Promise.all([
+    fetch('data/chord_data.json').then(r=>r.json()),
+    fetch('data/sankey_data.json').then(r=>r.json()),
+    fetch('data/grafo_bipartito.json').then(r=>r.json()),
+    fetch('data/personajes_resumen.json').then(r=>r.json()),
+  ]);
+  DATA={chord,sankey,bip,res};
+  construirLeyendas();
+  renderVista();
+}
+
+function renderVista(){
+  if(vistaActiva==='chord') renderChord();
+  else if(vistaActiva==='sankey') renderSankey();
+  else renderRadial(persSeleccionado);
+}
+
+// ── CHORD ────────────────────────────────────────────────────────────────────
+function renderChord(){
+  document.getElementById('titulo').textContent='Co-presencia — personajes que comparten espacio';
+  const cont=document.getElementById('canvas');cont.innerHTML='';
+  const W=cont.offsetWidth,H=cont.offsetHeight;
+  const size=Math.min(W,H)*.82,cx=W/2,cy=H/2,r=size/2;
+  const innerR=r*.70,outerR=r*.78;
+
+  const svg=d3.select(cont).append('svg').attr('width',W).attr('height',H);
+
+  // glow
+  const defs=svg.append('defs');
+  const fl=defs.append('filter').attr('id','glow');
+  fl.append('feGaussianBlur').attr('stdDeviation',4).attr('result','cb');
+  const fm=fl.append('feMerge');
+  fm.append('feMergeNode').attr('in','cb');
+  fm.append('feMergeNode').attr('in','SourceGraphic');
+
+  const g=svg.append('g').attr('transform',`translate(${cx},${cy})`);
+  const pers=DATA.chord.personajes;
+  const matrix=DATA.chord.matrix;
+  const menciones=DATA.chord.menciones;
+
+  // sin diagonal
+  const mat=matrix.map((row,i)=>row.map((v,j)=>i===j?0:v));
+  const chord=d3.chord().padAngle(.025).sortSubgroups(d3.descending)(mat);
+
+  const color=d=>PERS_COLOR[pers[d.index]]||'#888';
+  const ribbon=d3.ribbon().radius(innerR-1);
+  const arc=d3.arc().innerRadius(innerR).outerRadius(outerR);
+
+  // ribbons
+  const ribbons=g.append('g').selectAll('path')
+    .data(chord).join('path')
+    .attr('d',ribbon)
+    .attr('fill',d=>color(d.source))
+    .attr('opacity',.22)
+    .attr('stroke','none')
+    .style('cursor','pointer');
+
+  // grupos
+  const groups=g.append('g').selectAll('g')
+    .data(chord.groups).join('g');
+
+  groups.append('path')
+    .attr('d',arc)
+    .attr('fill',color)
+    .attr('opacity',.9)
+    .attr('stroke','rgba(0,0,5,.6)')
+    .attr('stroke-width',.5)
+    .style('cursor','pointer')
+    .style('filter','url(#glow)');
+
+  // etiquetas
+  groups.append('text')
+    .each(d=>{d.angle=(d.startAngle+d.endAngle)/2;})
+    .attr('dy','.35em')
+    .attr('transform',d=>`rotate(${d.angle*180/Math.PI-90}) translate(${outerR+12}) ${d.angle>Math.PI?'rotate(180)':''}`)
+    .attr('text-anchor',d=>d.angle>Math.PI?'end':'start')
+    .attr('font-size',d=>Math.max(8,Math.min(13,(d.endAngle-d.startAngle)*130))+'px')
+    .attr('fill',color)
+    .attr('font-family','Helvetica Neue,sans-serif')
+    .attr('font-weight','700')
+    .text(d=>pers[d.index].split(' ')[0]);
+
+  // hover grupos
+  groups
+    .on('mouseover',(_,d)=>{
+      ribbons.attr('opacity',r=>r.source.index===d.index||r.target.index===d.index?.65:.04);
+      groups.selectAll('path').attr('opacity',g2=>g2.index===d.index?1:.35);
+    })
+    .on('mouseout',()=>{ribbons.attr('opacity',.22);groups.selectAll('path').attr('opacity',.9);ocultarTT();})
+    .on('mousemove',(e,d)=>{
+      const p=pers[d.index];
+      mostrarTT(e,p,`${menciones[p]||''} menciones espaciales`,'');
+    })
+    .on('click',(_,d)=>{
+      const p=pers[d.index];
+      const r=(DATA.res||[]).find(x=>x.personaje===p);
+      mostrarInfo({titulo:p,meta:`${menciones[p]||''} menciones`,desc:r?r.top_lugares:'',cita:r?r.cita_ejemplo:''});
+    });
+
+  // hover ribbons
+  ribbons
+    .on('mouseover',(e,d)=>{
+      ribbons.attr('opacity',r=>r===d?.75:.04);
+      const s=pers[d.source.index],t=pers[d.target.index];
+      mostrarTT(e,`${s.split(' ')[0]} ↔ ${t.split(' ')[0]}`,`${d.source.value} lugares compartidos`,'');
+    })
+    .on('mousemove',moverTT)
+    .on('mouseout',()=>{ribbons.attr('opacity',.22);ocultarTT();})
+    .on('click',(_,d)=>{
+      const s=pers[d.source.index],t=pers[d.target.index];
+      mostrarInfo({titulo:`${s} ↔ ${t}`,meta:`${d.source.value} lugares compartidos`,desc:'',cita:''});
+    });
+}
+
+// ── SANKEY ───────────────────────────────────────────────────────────────────
+function renderSankey(){
+  document.getElementById('titulo').textContent='Personaje → Tipo de espacio → Lugar (de íntimo a público)';
+  const cont=document.getElementById('canvas');cont.innerHTML='';
+  const W=cont.offsetWidth,H=cont.offsetHeight;
+  const mar={top:40,right:110,bottom:40,left:200};
+  const iW=W-mar.left-mar.right,iH=H-mar.top-mar.bottom;
+
+  const svg=d3.select(cont).append('svg').attr('width',W).attr('height',H)
+    .style('overflow','visible');
+  const g=svg.append('g').attr('transform',`translate(${mar.left},${mar.top})`);
+
+  const defs=svg.append('defs');
+  const fl=defs.append('filter').attr('id','glow2');
+  fl.append('feGaussianBlur').attr('stdDeviation',2.5).attr('result','cb');
+  const fm=fl.append('feMerge');
+  fm.append('feMergeNode').attr('in','cb');
+  fm.append('feMergeNode').attr('in','SourceGraphic');
+
+  const sankeyGen=d3.sankey()
+    .nodeWidth(10)
+    .nodePadding(6)
+    .nodeSort((a,b)=>{
+      if(a.tipo==='lugar'&&b.tipo==='lugar') return a.nivel-b.nivel;
+      return null;
+    })
+    .extent([[0,0],[iW,iH]]);
+
+  const rawNodes = DATA.sankey.nodes.map(d=>({...d}));
+  const graph=sankeyGen({
+    nodes: rawNodes,
+    links: DATA.sankey.links.map(d=>({...d}))
+  });
+
+  // Mapa nombre→color original (antes de que sankey modifique los nodos)
+  const colorPorNombre = {};
+  DATA.sankey.nodes.forEach(n=>{
+    if(n.tipo==='lugar') colorPorNombre[n.name] = n.color;
+  });
+
+  function nodeColor(d){
+    if(d.tipo==='personaje') return PERS_COLOR[d.name]||'#fff';
+    if(d.tipo==='categoria') return CAT_COLOR[d.name]||'#ffffff';
+    return colorPorNombre[d.name]||'rgba(255,255,255,.5)';
+  }
+
+  // gradiente por link
+  graph.links.forEach((l,i)=>{
+    const grad=defs.append('linearGradient')
+      .attr('id',`lg${i}`).attr('gradientUnits','userSpaceOnUse')
+      .attr('x1',l.source.x1).attr('x2',l.target.x0);
+    grad.append('stop').attr('offset','0%').attr('stop-color',nodeColor(l.source)).attr('stop-opacity',.45);
+    grad.append('stop').attr('offset','100%').attr('stop-color',nodeColor(l.target)).attr('stop-opacity',.45);
+  });
+
+  // links
+  const linkG=g.append('g').selectAll('g')
+    .data(graph.links).join('g').style('cursor','pointer');
+
+  linkG.append('path')
+    .attr('d',d3.sankeyLinkHorizontal())
+    .attr('stroke',(_,i)=>`url(#lg${i})`)
+    .attr('stroke-width',d=>Math.max(1,d.width))
+    .attr('fill','none');
+
+  linkG
+    .on('mouseover',(e,d)=>{
+      d3.select(e.currentTarget).select('path').attr('stroke-width',d=>Math.max(2,d.width*1.5));
+      mostrarTT(e,`${d.source.name} → ${d.target.name}`,`${d.value} menciones`,'');
+    })
+    .on('mousemove',moverTT)
+    .on('mouseout',e=>{
+      d3.select(e.currentTarget).select('path').attr('stroke-width',d=>Math.max(1,d.width));
+      ocultarTT();
+    });
+
+  // nodos
+  const nodoG=g.append('g').selectAll('g')
+    .data(graph.nodes).join('g').style('cursor','pointer');
+
+  nodoG.append('rect')
+    .attr('x',d=>d.x0).attr('y',d=>d.y0)
+    .attr('width',d=>d.x1-d.x0)
+    .attr('height',d=>Math.max(2,d.y1-d.y0))
+    .attr('fill',nodeColor).attr('rx',2)
+    .style('filter','url(#glow2)');
+
+  // etiquetas — lugar a la derecha con nivel indicado
+  nodoG.append('text')
+    .attr('x',d=>d.x0<iW/2?d.x0-8:d.x1+8)
+    .attr('y',d=>(d.y0+d.y1)/2)
+    .attr('text-anchor',d=>d.x0<iW/2?'end':'start')
+    .attr('dominant-baseline','middle')
+    .attr('font-size',d=>d.tipo==='personaje'?11:d.tipo==='categoria'?10:9)
+    .attr('font-weight',d=>d.tipo==='personaje'?'700':'400')
+    .attr('fill',nodeColor)
+    .attr('font-family','Helvetica Neue,sans-serif')
+    .text(d=>d.name);
+
+  nodoG
+    .on('mouseover',(e,d)=>{
+      const nivel=d.tipo==='lugar'?` · nivel ${d.nivel}`:'';
+      mostrarTT(e,d.name,`${d.value||''} menciones${nivel}`,'');
+    })
+    .on('mousemove',moverTT)
+    .on('mouseout',ocultarTT)
+    .on('click',(_,d)=>{
+      if(d.tipo==='personaje'){
+        const r=(DATA.res||[]).find(x=>x.personaje===d.name);
+        mostrarInfo({titulo:d.name,meta:`${d.value||''} menciones`,desc:r?r.top_lugares:'',cita:r?r.cita_ejemplo:''});
+      }
+    });
+
+}
+
+// ── RADIAL ───────────────────────────────────────────────────────────────────
+function renderRadial(centro){
+  persSeleccionado=centro;
+  const esLugar=modoRadial==='lugar';
+  document.getElementById('titulo').textContent=esLugar
+    ?'Lugar → Personajes que lo habitan':'Personaje → Lugares donde aparece';
+  const cont=document.getElementById('canvas');cont.innerHTML='';
+  const W=cont.offsetWidth,H=cont.offsetHeight;
+
+  // En modo lugar el "centro" es un lugar; en modo pers el "centro" es un personaje
+  const pesoMin=1;
+  const todosEnlaces=DATA.bip.enlaces.filter(e=>e.peso>=pesoMin);
+
+  const enlacesFilt=centro
+    ?todosEnlaces.filter(e=>{
+        const s=typeof e.source==='object'?e.source.id:e.source;
+        const t=typeof e.target==='object'?e.target.id:e.target;
+        return s===centro||t===centro;
+      })
+    :todosEnlaces;
+
+  const nodoIds=new Set([
+    ...enlacesFilt.map(e=>typeof e.source==='object'?e.source.id:e.source),
+    ...enlacesFilt.map(e=>typeof e.target==='object'?e.target.id:e.target)
+  ]);
+  const nodos=DATA.bip.nodos.filter(n=>nodoIds.has(n.id)).map(n=>({...n}));
+
+  // Peso de relación: cuando hay centro, cada nodo secundario usa el peso
+  // del enlace directo con el centro. El centro usa sus menciones totales.
+  // Cuando no hay centro, se usa el peso acumulado de todos los enlaces.
+  const pesoRelacion={};
+  if(centro){
+    enlacesFilt.forEach(e=>{
+      const s=typeof e.source==='object'?e.source.id:e.source;
+      const t=typeof e.target==='object'?e.target.id:e.target;
+      const otro=s===centro?t:s;
+      pesoRelacion[otro]=e.peso;
+    });
+    // nodo centro: sus menciones totales del nodo original
+    const nc=DATA.bip.nodos.find(n=>n.id===centro);
+    pesoRelacion[centro]=nc?nc.menciones||1:1;
+  } else {
+    // sin centro: peso acumulado de todos sus enlaces en la vista
+    enlacesFilt.forEach(e=>{
+      const s=typeof e.source==='object'?e.source.id:e.source;
+      const t=typeof e.target==='object'?e.target.id:e.target;
+      pesoRelacion[s]=(pesoRelacion[s]||0)+e.peso;
+      pesoRelacion[t]=(pesoRelacion[t]||0)+e.peso;
+    });
+  }
+  const pesoMax=d3.max(Object.values(pesoRelacion))||1;
+  const enlaceMax=d3.max(enlacesFilt,e=>e.peso)||1;
+
+  const svg=d3.select(cont).append('svg').attr('width',W).attr('height',H);
+  const zoom=d3.zoom().scaleExtent([.15,8]).on('zoom',e=>gg.attr('transform',e.transform));
+  svg.call(zoom);
+  const gg=svg.append('g');
+
+  const defs=svg.append('defs');
+  const fl=defs.append('filter').attr('id','glow3');
+  fl.append('feGaussianBlur').attr('stdDeviation',4).attr('result','cb');
+  const fm=fl.append('feMerge');
+  fm.append('feMergeNode').attr('in','cb');
+  fm.append('feMergeNode').attr('in','SourceGraphic');
+
+  // Tipo de nodo: grupo 0 = personaje, grupo 1 = lugar
+  const esPersonaje=d=>d.grupo===0;
+  const esLugarN=d=>d.grupo===1;
+
+  // Personaje→Lugares: personaje=blanco, lugar=azul
+  // Lugar→Personajes: lugar=blanco, personaje=azul
+  const esCentro=d=>centro?d.id===centro:false;
+  const colorN=d=>{
+    if(esLugar){
+      // modo lugar→personajes
+      return esPersonaje(d)?'#0000ff':'#ffffff';
+    } else {
+      // modo personaje→lugares
+      return esPersonaje(d)?'#ffffff':'#0000ff';
+    }
+  };
+
+  // Escala muy agresiva: exponente bajo = curva pronunciada en valores pequeños
+  const rScale = d3.scalePow().exponent(0.22).domain([1, pesoMax]).range([3, 48]).clamp(true);
+
+  // En modo sin centro pers→lugares, los personajes deben caber en H*0.30
+  // Calculamos el radio máximo permitido para que 13 personajes quepan en 2 filas en esa franja
+  const nPers = nodos.filter(n=>n.grupo===0).length || 13;
+  // Una sola fila: radio máximo = mitad del espacio por personaje
+  const rMaxPers = Math.min((W*.96)/(nPers*2.4), H*.13);
+
+  const rN=d=>{
+    const r=Math.max(3, rScale(pesoRelacion[d.id]||1));
+    // personaje en modo sin centro: limitar para que quepan todos
+    if(!centro&&!esLugar&&esPersonaje(d)) return Math.min(r, rMaxPers);
+    if(centro&&d.id===centro&&!esLugar) return Math.min(r, H*.07);
+    return r;
+  };
+
+  const DOM=new Set(['cama','espejo','cuarto','baño','estudio','despacho','escritorio','sala','cocina','ventana','puerta','casa','apartamento','departamento','edificio']);
+  const TRA=new Set(['coche','camión']);
+  const NIVEL_ORD=['cama','espejo','cuarto','baño','estudio','despacho','escritorio','sala','cocina','ventana','puerta','casa','apartamento','departamento','edificio','plaza','parque','escuela','calle','cine','café','oficina','coche','camión'];
+
+  // ── Posicionamiento en cuadrícula pura — sin simulación ─────────────────────
+  // Función: distribuir N items en X columnas dentro de un rectángulo
+  function grilla(items, x0, x1, y0, y1){
+    if(!items.length) return;
+    const n=items.length;
+    // calcular columnas óptimas para el aspect ratio dado
+    const ancho=x1-x0, alto=y1-y0;
+    const cols=Math.max(1,Math.round(Math.sqrt(n*(ancho/alto))));
+    const rows=Math.ceil(n/cols);
+    items.forEach((d,i)=>{
+      const col=i%cols, row=Math.floor(i/cols);
+      d.x=x0+ancho*(col+.5)/cols;
+      d.y=y0+alto*(row+.5)/rows;
+    });
+  }
+
+  const esBlanco=d=>esLugar?esLugarN(d):esPersonaje(d);
+
+  if(!centro){
+    // RED COMPLETA / PERS→LUGARES sin selección
+    // Personajes en franja superior, lugares divididos en 3 columnas abajo
+    const pers=nodos.filter(n=>n.grupo===0).sort((a,b)=>(pesoRelacion[b.id]||0)-(pesoRelacion[a.id]||0));
+    const dom =nodos.filter(n=>n.grupo===1&&DOM.has(n.id)).sort((a,b)=>NIVEL_ORD.indexOf(a.id)-NIVEL_ORD.indexOf(b.id));
+    const pub =nodos.filter(n=>n.grupo===1&&!DOM.has(n.id)&&!TRA.has(n.id)).sort((a,b)=>NIVEL_ORD.indexOf(a.id)-NIVEL_ORD.indexOf(b.id));
+    const tra =nodos.filter(n=>n.grupo===1&&TRA.has(n.id));
+    // Personajes: una sola fila centrada verticalmente en H*.03–H*.28
+    pers.forEach((n,i)=>{ n.x=W*(i+.5)/pers.length; n.y=H*.14; });
+    // Lugares: 3 columnas en la mitad inferior
+    grilla(dom,  W*.02, W*.33, H*.36, H*.96);
+    grilla(tra,  W*.35, W*.65, H*.36, H*.96);
+    grilla(pub,  W*.67, W*.98, H*.36, H*.96);
+
+  } else if(!esLugar){
+    // PERS→LUGARES con centro — personaje seleccionado arriba centro, lugares abajo en 3 col
+    const nc=nodos.find(n=>n.id===centro);
+    if(nc){nc.x=W/2; nc.y=H*.12;}
+    const dom=nodos.filter(n=>n.grupo===1&&DOM.has(n.id)).sort((a,b)=>NIVEL_ORD.indexOf(a.id)-NIVEL_ORD.indexOf(b.id));
+    const pub=nodos.filter(n=>n.grupo===1&&!DOM.has(n.id)&&!TRA.has(n.id)).sort((a,b)=>NIVEL_ORD.indexOf(a.id)-NIVEL_ORD.indexOf(b.id));
+    const tra=nodos.filter(n=>n.grupo===1&&TRA.has(n.id));
+    grilla(dom, W*.02, W*.33, H*.26, H*.96);
+    grilla(tra, W*.35, W*.65, H*.26, H*.96);
+    grilla(pub, W*.67, W*.98, H*.26, H*.96);
+
+  } else {
+    // LUGAR→PERS — lugar al centro, personajes en cuadrícula circular
+    const nc=nodos.find(n=>n.id===centro);
+    if(nc){nc.x=W/2; nc.y=H/2;}
+    const pers=nodos.filter(n=>n.grupo===0).sort((a,b)=>(pesoRelacion[b.id]||0)-(pesoRelacion[a.id]||0));
+    const radio=Math.min(W*.42, H*.42);
+    pers.forEach((p,i)=>{
+      const ang=(i/pers.length)*Math.PI*2-Math.PI/2;
+      p.x=W/2+Math.cos(ang)*radio;
+      p.y=H/2+Math.sin(ang)*radio;
+    });
+  }
+
+  // ── Dibujar enlaces ──────────────────────────────────────────────────────────
+  // Resolver src/tgt desde ids para que las líneas apunten a posiciones ya fijas
+  const posMap=Object.fromEntries(nodos.map(n=>[n.id,{x:n.x,y:n.y}]));
+  const enlacesResueltos=enlacesFilt.map(e=>({
+    ...e,
+    sx:posMap[typeof e.source==='object'?e.source.id:e.source]?.x||0,
+    sy:posMap[typeof e.source==='object'?e.source.id:e.source]?.y||0,
+    tx:posMap[typeof e.target==='object'?e.target.id:e.target]?.x||0,
+    ty:posMap[typeof e.target==='object'?e.target.id:e.target]?.y||0,
+  }));
+
+  gg.append('g').selectAll('line')
+    .data(enlacesResueltos).join('line')
+    .attr('x1',d=>d.sx).attr('y1',d=>d.sy)
+    .attr('x2',d=>d.tx).attr('y2',d=>d.ty)
+    .attr('stroke','rgba(255,255,255,.18)')
+    .attr('stroke-width',d=>Math.max(1,d.peso/enlaceMax*6))
+    .on('mouseover',(e,d)=>{
+      d3.select(e.target).attr('stroke','rgba(255,255,255,.5)');
+      const s=typeof d.source==='object'?d.source.id:d.source;
+      const t=typeof d.target==='object'?d.target.id:d.target;
+      mostrarTT(e,`${s} ↔ ${t}`,`${d.peso} menciones`,'');
+    })
+    .on('mousemove',moverTT)
+    .on('mouseout',e=>{d3.select(e.target).attr('stroke','rgba(255,255,255,.12)');ocultarTT();});
+
+  // ── Dibujar nodos ────────────────────────────────────────────────────────────
+  const nodo=gg.append('g').selectAll('g').data(nodos).join('g')
+    .style('cursor','pointer')
+    .attr('transform',d=>`translate(${d.x},${d.y})`);
+
+  nodo.append('circle')
+    .attr('r',d=>rN(d)*1.5).attr('fill',d=>esBlanco(d)?'#ffffff':'#0000ff')
+    .attr('opacity',d=>esBlanco(d)?.09:.03).style('filter','url(#glow3)');
+
+  nodo.append('circle').attr('r',rN).attr('fill',colorN)
+    .attr('stroke',d=>esBlanco(d)?'rgba(255,255,255,.35)':'rgba(0,0,255,.4)')
+    .attr('stroke-width',1.5);
+
+  nodo.append('text').text(d=>d.id)
+    .attr('text-anchor','middle').attr('dy',d=>rN(d)+12)
+    .attr('font-size',d=>esBlanco(d)?Math.max(9,Math.min(12,rN(d)*.5)):7.5)
+    .attr('font-weight',d=>esBlanco(d)?'700':'400')
+    .attr('fill',d=>esBlanco(d)?'#ffffff':'rgba(120,160,255,.85)')
+    .attr('font-family','Helvetica Neue,sans-serif').attr('pointer-events','none');
+
+  nodo.on('click',(e,d)=>{persSeleccionado=d.id;renderRadial(d.id);})
+    .on('mouseover',(e,d)=>{
+      const p=pesoRelacion[d.id]||0;
+      mostrarTT(e,d.id,centro&&d.id!==centro?`${p} menciones con ${centro}`:`${p} menciones totales`,'');
+    })
+    .on('mousemove',moverTT).on('mouseout',ocultarTT);
+
+  // ── Etiquetas de zona pers→lugares (con o sin centro) ────────────────────────
+  if(!esLugar){
+    const yDiv=centro?H*.24:H*.33;
+    // línea horizontal separadora personajes/lugares
+    svg.append('line').attr('x1',W*.02).attr('x2',W*.98).attr('y1',yDiv).attr('y2',yDiv)
+      .attr('stroke','rgba(255,255,255,.06)').attr('stroke-dasharray','4,8');
+    // líneas verticales separadoras de categorías
+    [W*.34,W*.66].forEach(x=>svg.append('line')
+      .attr('x1',x).attr('x2',x).attr('y1',yDiv).attr('y2',H-18)
+      .attr('stroke','rgba(255,255,255,.06)').attr('stroke-dasharray','3,8'));
+    // etiquetas
+    [{label:'DOMÉSTICO',x:W*.17},{label:'TRANSPORTE',x:W*.5},{label:'PÚBLICO',x:W*.83}]
+      .forEach(z=>svg.append('text').text(z.label).attr('x',z.x).attr('y',H-6)
+        .attr('text-anchor','middle').attr('font-size',8).attr('letter-spacing','0.16em')
+        .attr('fill','rgba(255,255,255,.55)').attr('font-family','Helvetica Neue,sans-serif').attr('font-weight','700'));
+  }
+
+  // ── Etiquetas de zona lugar→personajes ───────────────────────────────────────
+  if(centro&&esLugar){
+    // líneas divisorias en cruz: horizontal y vertical
+    svg.append('line').attr('x1',W*.08).attr('x2',W*.92).attr('y1',H/2)  .attr('y2',H/2)
+      .attr('stroke','rgba(255,255,255,.05)').attr('stroke-dasharray','3,8');
+    svg.append('line').attr('x1',W/2)  .attr('x2',W/2)  .attr('y1',H*.08).attr('y2',H*.92)
+      .attr('stroke','rgba(255,255,255,.05)').attr('stroke-dasharray','3,8');
+  }
+
+  // ── Chips ────────────────────────────────────────────────────────────────────
+  function chip(x,y,txt,onClick){
+    const g=svg.append('g').attr('cursor','pointer').on('click',onClick);
+    g.append('rect').attr('x',x).attr('y',y).attr('width',82).attr('height',20)
+      .attr('rx',10).attr('fill','rgba(255,255,255,.05)').attr('stroke','rgba(255,255,255,.1)').attr('stroke-width',.5);
+    g.append('text').text(txt).attr('x',x+41).attr('y',y+14).attr('text-anchor','middle')
+      .attr('font-size',8).attr('fill','rgba(255,255,255,.35)').attr('font-family','Helvetica Neue,sans-serif');
+  }
+  chip(8,8,'⊙ reset zoom',()=>svg.transition().duration(400).call(zoom.transform,d3.zoomIdentity));
+  if(centro) chip(W-90,8,'← ver todos',()=>{persSeleccionado=null;renderRadial(null);});
+}
+
+// ── RADIAL CATEGORÍA ACUMULADA ───────────────────────────────────────────────
+function renderRadialCategoria(lugarIds){
+  // Suma menciones de personajes en todos los lugares de la categoría
+  const persAcum={};
+  DATA.bip.enlaces.forEach(e=>{
+    if(lugarIds.includes(e.target)){
+      persAcum[e.source]=(persAcum[e.source]||0)+e.peso;
+    }
+  });
+
+  const cont=document.getElementById('canvas');cont.innerHTML='';
+  const W=cont.offsetWidth,H=cont.offsetHeight;
+  document.getElementById('titulo').textContent='Personajes por espacio acumulado';
+
+  const svg=d3.select(cont).append('svg').attr('width',W).attr('height',H);
+  const zoom=d3.zoom().scaleExtent([.15,8]).on('zoom',e=>gg.attr('transform',e.transform));
+  svg.call(zoom);
+  const gg=svg.append('g');
+
+  const defs=svg.append('defs');
+  const fl=defs.append('filter').attr('id','glowA');
+  fl.append('feGaussianBlur').attr('stdDeviation',4).attr('result','cb');
+  const fm=fl.append('feMerge');
+  fm.append('feMergeNode').attr('in','cb');fm.append('feMergeNode').attr('in','SourceGraphic');
+
+  const entradas=Object.entries(persAcum).sort((a,b)=>b[1]-a[1]);
+  const maxVal=entradas[0]?.[1]||1;
+  const rScale=d3.scalePow().exponent(0.22).domain([1,maxVal]).range([4,80]).clamp(true);
+
+  // Posición en arco superior
+  const cx=W/2, cy=H/2;
+  const radio=Math.min(W,H)*.36;
+  const nodos=entradas.map(([id,val],i)=>{
+    const ang=(i/entradas.length)*Math.PI*2 - Math.PI/2;
+    return {id,val,x:cx+Math.cos(ang)*radio,y:cy+Math.sin(ang)*radio};
+  });
+
+  const nodoG=gg.append('g').selectAll('g').data(nodos).join('g').style('cursor','pointer')
+    .call(d3.drag()
+      .on('start',(e,d)=>{d.fx=d.x;d.fy=d.y;})
+      .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;d3.select(e.sourceEvent.target.parentNode).attr('transform',`translate(${d.fx},${d.fy})`);})
+      .on('end',(e,d)=>{d.fx=null;d.fy=null;})
+    );
+
+  nodoG.append('circle')
+    .attr('r',d=>rScale(d.val)*1.5).attr('fill','#ffffff').attr('opacity',.07)
+    .style('filter','url(#glowA)');
+  nodoG.append('circle')
+    .attr('r',d=>rScale(d.val)).attr('fill','#ffffff')
+    .attr('stroke','rgba(255,255,255,.3)').attr('stroke-width',1.5);
+  nodoG.append('text')
+    .text(d=>d.id.split(' ')[0])
+    .attr('text-anchor','middle').attr('dy',d=>rScale(d.val)+13)
+    .attr('font-size',10).attr('font-weight','700')
+    .attr('fill','#fff').attr('font-family','Helvetica Neue,sans-serif')
+    .attr('pointer-events','none');
+  nodoG.append('text')
+    .text(d=>d.val)
+    .attr('text-anchor','middle').attr('dy','.35em')
+    .attr('font-size',d=>Math.max(8,Math.min(14,rScale(d.val)*.4)))
+    .attr('fill','rgba(0,0,0,.6)').attr('font-family','Helvetica Neue,sans-serif')
+    .attr('pointer-events','none');
+
+  nodoG.attr('transform',d=>`translate(${d.x},${d.y})`);
+
+  nodoG.on('mouseover',(e,d)=>mostrarTT(e,d.id,`${d.val} menciones en esta categoría`,''))
+    .on('mousemove',moverTT).on('mouseout',ocultarTT);
+
+  // Chip reset
+  const chipZ=svg.append('g').attr('cursor','pointer')
+    .on('click',()=>svg.transition().duration(400).call(zoom.transform,d3.zoomIdentity));
+  chipZ.append('rect').attr('x',8).attr('y',8).attr('width',72).attr('height',20)
+    .attr('rx',10).attr('fill','rgba(255,255,255,.06)').attr('stroke','rgba(255,255,255,.12)').attr('stroke-width',.5);
+  chipZ.append('text').text('⊙ reset zoom').attr('x',44).attr('y',22).attr('text-anchor','middle')
+    .attr('font-size',8).attr('fill','rgba(255,255,255,.4)').attr('font-family','Helvetica Neue,sans-serif');
+}
+
+// ── CAMBIO VISTA ─────────────────────────────────────────────────────────────
+function cambiarVista(v){
+  vistaActiva=v;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['chord','sankey','radial'][i]===v));
+  // acum removed
+  ['tab-chord','tab-sankey','tab-radial'].forEach(id=>document.getElementById(id).classList.toggle('active',id===`tab-${v}`));
+  renderVista();
+}
+
+function setModoRadial(modo){
+  modoRadial=modo;
+  document.getElementById('modo-pers').classList.toggle('active',modo==='personaje');
+  document.getElementById('modo-lugar').classList.toggle('active',modo==='lugar');
+  document.getElementById('desc-radial').textContent=modo==='personaje'
+    ?'Clic en un personaje para ver sus lugares.':
+    'Clic en un lugar para ver sus personajes.';
+  document.getElementById('panel-pers-lugares').style.display=modo==='personaje'?'':'none';
+  document.getElementById('panel-lugar-pers').style.display=modo==='lugar'?'':'none';
+  renderRadial(null);
+}
+
+// ── LEYENDAS ─────────────────────────────────────────────────────────────────
+function construirLeyendas(){
+  // Personajes en chord (con color) y radial (sin color, solo blanco)
+  const elChord=document.getElementById('pers-ley-chord');
+  Object.entries(PERS_COLOR).forEach(([p,c])=>{
+    const d=document.createElement('div');d.className='pers-ley-i';
+    d.innerHTML=`<div class="pers-dot" style="background:${c}"></div><span>${p}</span>`;
+    d.onclick=()=>{persSeleccionado=p;cambiarVista('radial');setModoRadial('personaje');renderRadial(p);};
+    elChord.appendChild(d);
+  });
+  const elRadial=document.getElementById('pers-ley-radial');
+  Object.keys(PERS_COLOR).forEach(p=>{
+    const d=document.createElement('div');d.className='pers-ley-i';
+    d.innerHTML=`<div class="pers-dot" style="background:#fff"></div><span>${p}</span>`;
+    d.onclick=()=>{persSeleccionado=p;cambiarVista('radial');setModoRadial('personaje');renderRadial(p);};
+    elRadial.appendChild(d);
+  });
+  // Panel lugar→pers: categorías colapsables, lugares ordenados por intimidad
+  if(DATA.bip){
+    const DOM_SET=new Set(['cama','espejo','cuarto','baño','estudio','despacho','escritorio','sala','cocina','ventana','puerta','casa','apartamento','departamento','edificio']);
+    const TRA_SET=new Set(['coche','camión']);
+
+    // Orden de intimidad (nivel asc)
+    const NIVEL={cama:0,espejo:0,cuarto:1,baño:1,estudio:1,despacho:1,escritorio:1,sala:2,cocina:2,ventana:3,puerta:4,casa:5,apartamento:5,departamento:5,edificio:5,plaza:7,parque:7,escuela:7,calle:8,cine:8,café:8,oficina:5,coche:9,camión:9};
+
+    const lugares=DATA.bip.nodos.filter(n=>n.grupo===1);
+
+    const cats=[
+      {key:'dom', label:'Espacio doméstico', set:DOM_SET, color:'#5c2d91'},
+      {key:'pub', label:'Espacio público',    set:null,    color:'#0088cc'},
+      {key:'tra', label:'Transporte',         set:TRA_SET, color:'#0055aa'},
+    ];
+
+    // Calcular total de menciones por categoría
+    const catTotal={dom:0,pub:0,tra:0};
+    lugares.forEach(l=>{
+      if(DOM_SET.has(l.id)) catTotal.dom+=l.menciones||0;
+      else if(TRA_SET.has(l.id)) catTotal.tra+=l.menciones||0;
+      else catTotal.pub+=l.menciones||0;
+    });
+
+    const contenedor=document.getElementById('cat-lista');
+    contenedor.innerHTML='';
+
+    cats.forEach(({key,label,set,color})=>{
+      const miembros=lugares
+        .filter(l=>set?set.has(l.id):!DOM_SET.has(l.id)&&!TRA_SET.has(l.id))
+        .sort((a,b)=>(NIVEL[a.id]??5)-(NIVEL[b.id]??5));
+      const total=catTotal[key];
+
+      // Chip de categoría — clic muestra red acumulada, flecha despliega lugares
+      const wrap=document.createElement('div');
+      wrap.style.cssText='margin-top:12px';
+
+      // Cabecera clicable
+      const cab=document.createElement('div');
+      cab.style.cssText='display:flex;align-items:center;gap:6px;cursor:pointer;padding:5px 6px;border-radius:2px;transition:background 150ms';
+      cab.onmouseenter=()=>cab.style.background='rgba(255,255,255,.04)';
+      cab.onmouseleave=()=>cab.style.background='';
+
+      // Dot categoría
+      const dot=document.createElement('div');
+      dot.style.cssText=`width:9px;height:9px;border-radius:50%;background:${color};flex-shrink:0`;
+
+      // Nombre + total
+      const nom=document.createElement('span');
+      nom.style.cssText='font-size:.68rem;color:#fff;flex:1';
+      nom.textContent=label;
+      const tot=document.createElement('span');
+      tot.style.cssText='font-size:.6rem;color:var(--muted)';
+      tot.textContent=total;
+
+      // Flecha toggle
+      const arr=document.createElement('span');
+      arr.style.cssText='font-size:.6rem;color:var(--muted);transition:transform 200ms;display:inline-block';
+      arr.textContent='▸';
+
+      cab.append(dot,nom,tot,arr);
+
+      // Al hacer clic en la cabecera → mostrar red acumulada de esa categoría
+      cab.onclick=()=>{
+        // Lanzar radial con los ids de esa categoría como "superNodo"
+        setModoRadial('lugar');
+        renderRadialCategoria(miembros.map(l=>l.id));
+      };
+
+      // Lista de lugares (colapsada por defecto)
+      const lista=document.createElement('div');
+      lista.style.cssText='display:none;padding-left:14px;margin-top:2px';
+      let abierto=false;
+
+      // Flecha abre/cierra lista — usar un botón separado sobre la flecha
+      arr.onclick=(e)=>{
+        e.stopPropagation();
+        abierto=!abierto;
+        lista.style.display=abierto?'block':'none';
+        arr.style.transform=abierto?'rotate(90deg)':'';
+      };
+
+      miembros.forEach(l=>{
+        const item=document.createElement('div');item.className='pers-ley-i';
+        item.innerHTML=`<div class="pers-dot" style="background:${color};opacity:.5;border:1px solid ${color}"></div><span>${l.id}</span><span style="font-size:.58rem;color:var(--muted);margin-left:auto">${l.menciones}</span>`;
+        item.onclick=()=>{persSeleccionado=l.id;renderRadial(l.id);};
+        lista.appendChild(item);
+      });
+
+      wrap.append(cab,lista);
+      contenedor.appendChild(wrap);
+    });
+  }
+}
+
+// ── INFO ─────────────────────────────────────────────────────────────────────
+function mostrarInfo({titulo,meta,desc,cita}){
+  document.getElementById('info').innerHTML=`
+    <div class="it">${titulo}</div>
+    <div class="im">${meta}</div>
+    ${desc?`<div style="font-size:.68rem;margin-top:3px;color:var(--muted)">${desc}</div>`:''}
+    ${cita?`<div class="ic">"${cita}"</div>`:''}
+  `;
+}
+
+// ── TOOLTIP ──────────────────────────────────────────────────────────────────
+function mostrarTT(e,t,s,ex){
+  const tt=document.getElementById('tt');
+  tt.innerHTML=`<b>${t}</b>${s?`<small>${s}</small>`:''}${ex?`<small style="color:#333">${ex}</small>`:''}`;
+  tt.style.display='block';moverTT(e);
+}
+function moverTT(e){const tt=document.getElementById('tt');tt.style.left=(e.clientX+14)+'px';tt.style.top=(e.clientY-8)+'px';}
+function ocultarTT(){document.getElementById('tt').style.display='none';}
+
+cargar();
+
+// ── INTRO REDES ──────────────────────────────────────────────────────────────
+(function(){
+  const intro=document.getElementById('intro-r');
+  const cnv=document.getElementById('intro-r-bg');
+  const ctx=cnv.getContext('2d');
+
+
+  const ruido=[
+    'Pánico','Peligro','Silencio','Odio','Cambio','Mujer','Espacio',
+    'Extranjero','Ruido','Vacío','Grieta','Exilio','Escritura','Recuerdo',
+    'Historia','Colonialismo','Máscara','Tortura','Lenguaje','Miedo',
+    'Umbral','Cuerpo','Territorio','Violencia','Mapa','Afuera','Gestos',
+    'Clase','Traducción','Forma','Tiempo','Plástico','Cerrado','Abierto',
+    'Susana','Lourdes','Socorro','Ramiro','Arturo','Lola','González',
+    'casa','oficina','calle','ventana','coche','camión','café','cuarto',
+    'sala','puerta','cama','espejo','baño','edificio','departamento',
+    'integración','flujo','barrio','sueño','silencio','ciudad','miedo',
+  ];
+  let _seed=77;
+  function sr(){_seed=(_seed*1664525+1013904223)>>>0;return _seed/4294967296;}
+  function rnd(){return ruido[Math.floor(sr()*ruido.length)];}
+
+  let _layout=[], _phases=[];
+  const FS=13;
+
+  function build(){
+    cnv.width=window.innerWidth; cnv.height=window.innerHeight;
+    _seed=77; _layout=[]; _phases=[];
+    const lh=Math.round(FS*1.52);
+    ctx.font=`italic ${FS}px Georgia,serif`;
+    let r=0, x=-(r*71)%140;
+    const maxY=cnv.height+lh;
+    while(true){
+      const burst=Math.floor(sr()*3)+1;
+      for(let b=0;b<burst;b++){
+        const t=rnd()+'.  ';
+        const tw=ctx.measureText(t).width;
+        if(x+tw>cnv.width+20){r++;x=-(r*71)%140;}
+        const y=r*lh+FS;
+        if(y>maxY) return;
+        _layout.push({t,x,y,pi:_phases.length});
+        _phases.push({phase:sr(),period:3000+sr()*5000});
+        x+=tw;
+      }
+    }
+  }
+
+  build();
+  window.addEventListener('resize',build);
+
+  const t0=performance.now();
+  function frame(now){
+    if(intro.style.display!=='none'){
+      const el=now-t0;
+      ctx.clearRect(0,0,cnv.width,cnv.height);
+      ctx.font=`italic ${FS}px Georgia,serif`;
+      _layout.forEach(tok=>{
+        const ph=_phases[tok.pi];
+        const c=(el/ph.period+ph.phase)%1;
+        const op=c<0.4?c/0.4:c<0.6?1:(1-c)/0.4;
+        ctx.fillStyle=`rgba(255,255,255,${op*0.13})`;
+        ctx.fillText(tok.t,tok.x,tok.y);
+      });
+      requestAnimationFrame(frame);
+    }
+  }
+  requestAnimationFrame(frame);
+
+  window.cerrarIntroR=function(){
+    intro.classList.add('oculto');
+    setTimeout(()=>intro.style.display='none',650);
+  };
+})();
+</script>
+</body>
+</html>

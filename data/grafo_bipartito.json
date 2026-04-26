@@ -1,0 +1,1150 @@
+{
+  "nodos": [
+    {
+      "id": "Arturo",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 0,
+      "menciones": 42
+    },
+    {
+      "id": "Claude",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 1,
+      "menciones": 66
+    },
+    {
+      "id": "Fermín",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 2,
+      "menciones": 12
+    },
+    {
+      "id": "González",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 3,
+      "menciones": 11
+    },
+    {
+      "id": "Lola",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 4,
+      "menciones": 17
+    },
+    {
+      "id": "Lourdes",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 5,
+      "menciones": 382
+    },
+    {
+      "id": "Madre de Susana",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 6,
+      "menciones": 66
+    },
+    {
+      "id": "María Laura",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 7,
+      "menciones": 29
+    },
+    {
+      "id": "Mateo",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 8,
+      "menciones": 29
+    },
+    {
+      "id": "Padre de Susana",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 9,
+      "menciones": 50
+    },
+    {
+      "id": "Ramiro",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 10,
+      "menciones": 54
+    },
+    {
+      "id": "Socorro",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 11,
+      "menciones": 66
+    },
+    {
+      "id": "Susana (narradora)",
+      "tipo": "personaje",
+      "grupo": 0,
+      "idx": 12,
+      "menciones": 570
+    },
+    {
+      "id": "casa",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 162,
+      "idx": 13
+    },
+    {
+      "id": "oficina",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 144,
+      "idx": 14
+    },
+    {
+      "id": "calle",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 120,
+      "idx": 15
+    },
+    {
+      "id": "apartamento",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 105,
+      "idx": 16
+    },
+    {
+      "id": "ventana",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 91,
+      "idx": 17
+    },
+    {
+      "id": "coche",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 67,
+      "idx": 19
+    },
+    {
+      "id": "camión",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 64,
+      "idx": 20
+    },
+    {
+      "id": "cuarto",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 59,
+      "idx": 21
+    },
+    {
+      "id": "puerta",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 57,
+      "idx": 22
+    },
+    {
+      "id": "escuela",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 52,
+      "idx": 23
+    },
+    {
+      "id": "café",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 44,
+      "idx": 24
+    },
+    {
+      "id": "sala",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 42,
+      "idx": 25
+    },
+    {
+      "id": "escritorio",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 24,
+      "idx": 27
+    },
+    {
+      "id": "cine",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 24,
+      "idx": 28
+    },
+    {
+      "id": "departamento",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 23,
+      "idx": 29
+    },
+    {
+      "id": "cama",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 23,
+      "idx": 30
+    },
+    {
+      "id": "edificio",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 22,
+      "idx": 31
+    },
+    {
+      "id": "despacho",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 21,
+      "idx": 32
+    },
+    {
+      "id": "plaza",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 21,
+      "idx": 33
+    },
+    {
+      "id": "baño",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 12,
+      "idx": 37
+    },
+    {
+      "id": "estudio",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 12,
+      "idx": 38
+    },
+    {
+      "id": "cocina",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 11,
+      "idx": 40
+    },
+    {
+      "id": "espejo",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 11,
+      "idx": 41
+    },
+    {
+      "id": "parque",
+      "tipo": "lugar",
+      "grupo": 1,
+      "menciones": 11,
+      "idx": 42
+    }
+  ],
+  "enlaces": [
+    {
+      "source": "Susana (narradora)",
+      "target": "casa",
+      "peso": 44
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "casa",
+      "peso": 9
+    },
+    {
+      "source": "Lourdes",
+      "target": "casa",
+      "peso": 54
+    },
+    {
+      "source": "Socorro",
+      "target": "casa",
+      "peso": 7
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "casa",
+      "peso": 8
+    },
+    {
+      "source": "Lola",
+      "target": "casa",
+      "peso": 8
+    },
+    {
+      "source": "González",
+      "target": "casa",
+      "peso": 1
+    },
+    {
+      "source": "Claude",
+      "target": "casa",
+      "peso": 9
+    },
+    {
+      "source": "Fermín",
+      "target": "casa",
+      "peso": 5
+    },
+    {
+      "source": "Mateo",
+      "target": "casa",
+      "peso": 6
+    },
+    {
+      "source": "María Laura",
+      "target": "casa",
+      "peso": 4
+    },
+    {
+      "source": "Arturo",
+      "target": "casa",
+      "peso": 3
+    },
+    {
+      "source": "Ramiro",
+      "target": "casa",
+      "peso": 4
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "apartamento",
+      "peso": 25
+    },
+    {
+      "source": "Lourdes",
+      "target": "apartamento",
+      "peso": 39
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "apartamento",
+      "peso": 2
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "apartamento",
+      "peso": 3
+    },
+    {
+      "source": "Mateo",
+      "target": "apartamento",
+      "peso": 3
+    },
+    {
+      "source": "Socorro",
+      "target": "apartamento",
+      "peso": 6
+    },
+    {
+      "source": "María Laura",
+      "target": "apartamento",
+      "peso": 5
+    },
+    {
+      "source": "Lola",
+      "target": "apartamento",
+      "peso": 1
+    },
+    {
+      "source": "Claude",
+      "target": "apartamento",
+      "peso": 9
+    },
+    {
+      "source": "Arturo",
+      "target": "apartamento",
+      "peso": 2
+    },
+    {
+      "source": "Ramiro",
+      "target": "apartamento",
+      "peso": 10
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "departamento",
+      "peso": 10
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "departamento",
+      "peso": 3
+    },
+    {
+      "source": "Lourdes",
+      "target": "departamento",
+      "peso": 5
+    },
+    {
+      "source": "Claude",
+      "target": "departamento",
+      "peso": 1
+    },
+    {
+      "source": "Lola",
+      "target": "departamento",
+      "peso": 2
+    },
+    {
+      "source": "María Laura",
+      "target": "departamento",
+      "peso": 1
+    },
+    {
+      "source": "Ramiro",
+      "target": "departamento",
+      "peso": 1
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "edificio",
+      "peso": 2
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "edificio",
+      "peso": 10
+    },
+    {
+      "source": "Lourdes",
+      "target": "edificio",
+      "peso": 5
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "edificio",
+      "peso": 3
+    },
+    {
+      "source": "Claude",
+      "target": "edificio",
+      "peso": 2
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "cuarto",
+      "peso": 17
+    },
+    {
+      "source": "Lourdes",
+      "target": "cuarto",
+      "peso": 27
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "cuarto",
+      "peso": 2
+    },
+    {
+      "source": "Fermín",
+      "target": "cuarto",
+      "peso": 1
+    },
+    {
+      "source": "Mateo",
+      "target": "cuarto",
+      "peso": 1
+    },
+    {
+      "source": "Arturo",
+      "target": "cuarto",
+      "peso": 2
+    },
+    {
+      "source": "Socorro",
+      "target": "cuarto",
+      "peso": 3
+    },
+    {
+      "source": "Claude",
+      "target": "cuarto",
+      "peso": 5
+    },
+    {
+      "source": "Ramiro",
+      "target": "cuarto",
+      "peso": 1
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "sala",
+      "peso": 13
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "sala",
+      "peso": 1
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "sala",
+      "peso": 5
+    },
+    {
+      "source": "Lourdes",
+      "target": "sala",
+      "peso": 14
+    },
+    {
+      "source": "Socorro",
+      "target": "sala",
+      "peso": 4
+    },
+    {
+      "source": "María Laura",
+      "target": "sala",
+      "peso": 1
+    },
+    {
+      "source": "Lola",
+      "target": "sala",
+      "peso": 1
+    },
+    {
+      "source": "Claude",
+      "target": "sala",
+      "peso": 2
+    },
+    {
+      "source": "Ramiro",
+      "target": "sala",
+      "peso": 1
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "cocina",
+      "peso": 4
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "cocina",
+      "peso": 1
+    },
+    {
+      "source": "Arturo",
+      "target": "cocina",
+      "peso": 1
+    },
+    {
+      "source": "Socorro",
+      "target": "cocina",
+      "peso": 1
+    },
+    {
+      "source": "Lourdes",
+      "target": "cocina",
+      "peso": 2
+    },
+    {
+      "source": "Ramiro",
+      "target": "cocina",
+      "peso": 1
+    },
+    {
+      "source": "Claude",
+      "target": "cocina",
+      "peso": 1
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "baño",
+      "peso": 6
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "baño",
+      "peso": 1
+    },
+    {
+      "source": "Lourdes",
+      "target": "baño",
+      "peso": 3
+    },
+    {
+      "source": "María Laura",
+      "target": "baño",
+      "peso": 1
+    },
+    {
+      "source": "Arturo",
+      "target": "baño",
+      "peso": 1
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "ventana",
+      "peso": 3
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "ventana",
+      "peso": 1
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "ventana",
+      "peso": 40
+    },
+    {
+      "source": "Mateo",
+      "target": "ventana",
+      "peso": 1
+    },
+    {
+      "source": "Lourdes",
+      "target": "ventana",
+      "peso": 27
+    },
+    {
+      "source": "Claude",
+      "target": "ventana",
+      "peso": 5
+    },
+    {
+      "source": "Arturo",
+      "target": "ventana",
+      "peso": 4
+    },
+    {
+      "source": "Socorro",
+      "target": "ventana",
+      "peso": 4
+    },
+    {
+      "source": "Ramiro",
+      "target": "ventana",
+      "peso": 6
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "puerta",
+      "peso": 25
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "puerta",
+      "peso": 3
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "puerta",
+      "peso": 1
+    },
+    {
+      "source": "Lourdes",
+      "target": "puerta",
+      "peso": 19
+    },
+    {
+      "source": "Mateo",
+      "target": "puerta",
+      "peso": 2
+    },
+    {
+      "source": "Lola",
+      "target": "puerta",
+      "peso": 1
+    },
+    {
+      "source": "Claude",
+      "target": "puerta",
+      "peso": 3
+    },
+    {
+      "source": "Socorro",
+      "target": "puerta",
+      "peso": 1
+    },
+    {
+      "source": "Ramiro",
+      "target": "puerta",
+      "peso": 2
+    },
+    {
+      "source": "Lourdes",
+      "target": "despacho",
+      "peso": 6
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "despacho",
+      "peso": 12
+    },
+    {
+      "source": "María Laura",
+      "target": "despacho",
+      "peso": 2
+    },
+    {
+      "source": "Ramiro",
+      "target": "despacho",
+      "peso": 1
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "oficina",
+      "peso": 6
+    },
+    {
+      "source": "Lourdes",
+      "target": "oficina",
+      "peso": 30
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "oficina",
+      "peso": 76
+    },
+    {
+      "source": "González",
+      "target": "oficina",
+      "peso": 5
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "oficina",
+      "peso": 4
+    },
+    {
+      "source": "Mateo",
+      "target": "oficina",
+      "peso": 4
+    },
+    {
+      "source": "Socorro",
+      "target": "oficina",
+      "peso": 6
+    },
+    {
+      "source": "Lola",
+      "target": "oficina",
+      "peso": 1
+    },
+    {
+      "source": "María Laura",
+      "target": "oficina",
+      "peso": 5
+    },
+    {
+      "source": "Claude",
+      "target": "oficina",
+      "peso": 3
+    },
+    {
+      "source": "Arturo",
+      "target": "oficina",
+      "peso": 1
+    },
+    {
+      "source": "Ramiro",
+      "target": "oficina",
+      "peso": 3
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "estudio",
+      "peso": 5
+    },
+    {
+      "source": "Lourdes",
+      "target": "estudio",
+      "peso": 6
+    },
+    {
+      "source": "Claude",
+      "target": "estudio",
+      "peso": 1
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "escritorio",
+      "peso": 16
+    },
+    {
+      "source": "Lourdes",
+      "target": "escritorio",
+      "peso": 4
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "escritorio",
+      "peso": 1
+    },
+    {
+      "source": "Ramiro",
+      "target": "escritorio",
+      "peso": 1
+    },
+    {
+      "source": "Claude",
+      "target": "escritorio",
+      "peso": 2
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "cama",
+      "peso": 6
+    },
+    {
+      "source": "Lourdes",
+      "target": "cama",
+      "peso": 8
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "cama",
+      "peso": 1
+    },
+    {
+      "source": "Arturo",
+      "target": "cama",
+      "peso": 2
+    },
+    {
+      "source": "Claude",
+      "target": "cama",
+      "peso": 3
+    },
+    {
+      "source": "Socorro",
+      "target": "cama",
+      "peso": 1
+    },
+    {
+      "source": "Ramiro",
+      "target": "cama",
+      "peso": 2
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "espejo",
+      "peso": 8
+    },
+    {
+      "source": "Socorro",
+      "target": "espejo",
+      "peso": 1
+    },
+    {
+      "source": "Lourdes",
+      "target": "espejo",
+      "peso": 2
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "calle",
+      "peso": 54
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "calle",
+      "peso": 5
+    },
+    {
+      "source": "Lourdes",
+      "target": "calle",
+      "peso": 30
+    },
+    {
+      "source": "Socorro",
+      "target": "calle",
+      "peso": 7
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "calle",
+      "peso": 2
+    },
+    {
+      "source": "González",
+      "target": "calle",
+      "peso": 1
+    },
+    {
+      "source": "Fermín",
+      "target": "calle",
+      "peso": 4
+    },
+    {
+      "source": "María Laura",
+      "target": "calle",
+      "peso": 2
+    },
+    {
+      "source": "Arturo",
+      "target": "calle",
+      "peso": 9
+    },
+    {
+      "source": "Claude",
+      "target": "calle",
+      "peso": 2
+    },
+    {
+      "source": "Ramiro",
+      "target": "calle",
+      "peso": 4
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "escuela",
+      "peso": 25
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "escuela",
+      "peso": 2
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "escuela",
+      "peso": 2
+    },
+    {
+      "source": "Socorro",
+      "target": "escuela",
+      "peso": 6
+    },
+    {
+      "source": "Lourdes",
+      "target": "escuela",
+      "peso": 17
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "plaza",
+      "peso": 7
+    },
+    {
+      "source": "Lourdes",
+      "target": "plaza",
+      "peso": 5
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "plaza",
+      "peso": 2
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "plaza",
+      "peso": 4
+    },
+    {
+      "source": "Fermín",
+      "target": "plaza",
+      "peso": 2
+    },
+    {
+      "source": "Mateo",
+      "target": "plaza",
+      "peso": 1
+    },
+    {
+      "source": "Arturo",
+      "target": "parque",
+      "peso": 1
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "parque",
+      "peso": 6
+    },
+    {
+      "source": "Lourdes",
+      "target": "parque",
+      "peso": 2
+    },
+    {
+      "source": "Ramiro",
+      "target": "parque",
+      "peso": 2
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "café",
+      "peso": 26
+    },
+    {
+      "source": "Socorro",
+      "target": "café",
+      "peso": 3
+    },
+    {
+      "source": "Lourdes",
+      "target": "café",
+      "peso": 11
+    },
+    {
+      "source": "González",
+      "target": "café",
+      "peso": 1
+    },
+    {
+      "source": "María Laura",
+      "target": "café",
+      "peso": 3
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "cine",
+      "peso": 8
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "cine",
+      "peso": 2
+    },
+    {
+      "source": "Lourdes",
+      "target": "cine",
+      "peso": 4
+    },
+    {
+      "source": "Mateo",
+      "target": "cine",
+      "peso": 1
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "cine",
+      "peso": 1
+    },
+    {
+      "source": "Lola",
+      "target": "cine",
+      "peso": 2
+    },
+    {
+      "source": "María Laura",
+      "target": "cine",
+      "peso": 4
+    },
+    {
+      "source": "Socorro",
+      "target": "cine",
+      "peso": 1
+    },
+    {
+      "source": "Ramiro",
+      "target": "cine",
+      "peso": 1
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "coche",
+      "peso": 3
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "coche",
+      "peso": 27
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "coche",
+      "peso": 6
+    },
+    {
+      "source": "Lourdes",
+      "target": "coche",
+      "peso": 15
+    },
+    {
+      "source": "Claude",
+      "target": "coche",
+      "peso": 4
+    },
+    {
+      "source": "Socorro",
+      "target": "coche",
+      "peso": 6
+    },
+    {
+      "source": "Arturo",
+      "target": "coche",
+      "peso": 3
+    },
+    {
+      "source": "Ramiro",
+      "target": "coche",
+      "peso": 3
+    },
+    {
+      "source": "Susana (narradora)",
+      "target": "camión",
+      "peso": 31
+    },
+    {
+      "source": "Padre de Susana",
+      "target": "camión",
+      "peso": 3
+    },
+    {
+      "source": "González",
+      "target": "camión",
+      "peso": 3
+    },
+    {
+      "source": "Lourdes",
+      "target": "camión",
+      "peso": 8
+    },
+    {
+      "source": "Madre de Susana",
+      "target": "camión",
+      "peso": 4
+    },
+    {
+      "source": "Claude",
+      "target": "camión",
+      "peso": 3
+    },
+    {
+      "source": "Mateo",
+      "target": "camión",
+      "peso": 2
+    },
+    {
+      "source": "Arturo",
+      "target": "camión",
+      "peso": 6
+    },
+    {
+      "source": "María Laura",
+      "target": "camión",
+      "peso": 1
+    },
+    {
+      "source": "Socorro",
+      "target": "camión",
+      "peso": 1
+    },
+    {
+      "source": "Ramiro",
+      "target": "camión",
+      "peso": 2
+    }
+  ]
+}
