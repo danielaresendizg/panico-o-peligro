@@ -233,14 +233,20 @@ function drawFrame(now){
         href:e.href||null, eref:e
       });
 
-      const isHover=e.hoverable && _hoverTok===tok;
-      const linkFS=tFS;
-      const fs=isHover ? linkFS*1.4 : linkFS;
-      const yOff=isHover ? tFS*0.8 : 0;
-      if(e.mono){
-        ctx.font=`${fs}px Consolas,"Lucida Console",monospace`;
-      } else {
-        ctx.font=`italic ${fs}px Georgia,serif`;
+      // hover solo en links (cartografía y redes)
+      const isHover=e.href && _hoverTok===tok;
+      const fs=isHover ? tFS*1.5 : tFS;
+      const fontStr=e.mono
+        ? `${fs}px Consolas,"Lucida Console",monospace`
+        : `italic ${fs}px Georgia,serif`;
+      ctx.font=fontStr;
+
+      // centrar el hover: desplazar x para que el centro del token no se mueva
+      let drawX=tok.x;
+      if(isHover){
+        const twNormal=tok.tw;
+        const twHover=ctx.measureText(tok.t).width;
+        drawX=tok.x-(twHover-twNormal)/2;
       }
 
       if(e.color==='#ffee00'){
@@ -250,7 +256,7 @@ function drawFrame(now){
       } else {
         ctx.fillStyle=`rgba(255,255,255,${op*0.92})`;
       }
-      ctx.fillText(tok.t, tok.x, tok.y+yOff);
+      ctx.fillText(tok.t, drawX, tok.y);
       ctx.font=`italic ${tFS}px Georgia,serif`;
 
     } else if(tok.isRuido){
