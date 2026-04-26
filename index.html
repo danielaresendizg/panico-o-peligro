@@ -76,33 +76,51 @@ function getCanvasW(){ return getBreakpoint().w; }
 function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
+// 5 tiempos de aparición — cada grupo recibe un delay base
+// Las letras de cada palabra aparecen aleatoriamente en 800ms
+const T=[4500, 7000, 9500, 12000, 15000]; // 5 momentos
 const eventosDef=[
-  // grupo 0: título — empieza cuando el ruido ya está bajando (4s)
-  {t:'Pánico.',    delay: 4000, grupo:0, color:BLANCO},
-  {t:'Peligro.',   delay: 5200, grupo:0, color:BLANCO},
-  // grupo 1: autora
-  {t:'María.',     delay: 7000, grupo:1, color:BLANCO},
-  {t:'Luisa.',     delay: 7800, grupo:1, color:BLANCO},
-  {t:'Puga.',      delay: 8600, grupo:1, color:BLANCO},
-  // grupo 2: lugar
-  {t:'Centro.',    delay:10500, grupo:2, color:BLANCO},
-  {t:'Cultural.',  delay:11300, grupo:2, color:BLANCO},
-  {t:'España.',    delay:12100, grupo:2, color:BLANCO},
-  // grupo 3: fecha
-  {t:'25.06.2026.',delay:14000, grupo:3, color:BLANCO},
-  // grupo 4: artista 1
-  {t:'Daniela.',   delay:16000, grupo:4, color:BLANCO, hoverable:true},
-  {t:'Reséndiz.',  delay:17000, grupo:4, color:BLANCO, hoverable:true},
-  // grupo 5: artista 2
-  {t:'Brenda.',    delay:18500, grupo:5, color:BLANCO, hoverable:true},
-  {t:'Isabel.',    delay:19500, grupo:5, color:BLANCO, hoverable:true},
-  {t:'Pérez.',     delay:20500, grupo:5, color:BLANCO, hoverable:true},
-  // grupo 6: link cartografía
-  {t:'cartografía.',delay:23000,grupo:6, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
-  // grupo 7: link redes
-  {t:'redes.',     delay:25000, grupo:7, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
+  // T0: título
+  {t:'Pánico.',    delay:T[0],   grupo:0, color:BLANCO},
+  {t:'Peligro.',   delay:T[0],   grupo:0, color:BLANCO},
+  // T1: autora + lugar
+  {t:'María.',     delay:T[1],   grupo:1, color:BLANCO},
+  {t:'Luisa.',     delay:T[1],   grupo:1, color:BLANCO},
+  {t:'Puga.',      delay:T[1],   grupo:1, color:BLANCO},
+  {t:'Centro.',    delay:T[1],   grupo:2, color:BLANCO},
+  {t:'Cultural.',  delay:T[1],   grupo:2, color:BLANCO},
+  {t:'España.',    delay:T[1],   grupo:2, color:BLANCO},
+  // T2: fecha
+  {t:'25.06.2026.',delay:T[2],   grupo:3, color:BLANCO},
+  // T3: artistas
+  {t:'Daniela.',   delay:T[3],   grupo:4, color:BLANCO, hoverable:true},
+  {t:'Reséndiz.',  delay:T[3],   grupo:4, color:BLANCO, hoverable:true},
+  {t:'Brenda.',    delay:T[3],   grupo:5, color:BLANCO, hoverable:true},
+  {t:'Isabel.',    delay:T[3],   grupo:5, color:BLANCO, hoverable:true},
+  {t:'Pérez.',     delay:T[3],   grupo:5, color:BLANCO, hoverable:true},
+  // T4: links
+  {t:'cartografía.',delay:T[4],  grupo:6, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
+  {t:'redes.',      delay:T[4],  grupo:7, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
 ];
 const NUM_GRUPOS=8;
+
+// Permutación de letras por token (seeded) para revelar aleatoriamente
+// letterReveal[i] = array de índices en orden de aparición
+const REVEAL_MS=900; // ms para revelar todas las letras de un token
+function makeLetterOrder(str, seed){
+  let s=seed;
+  function sr(){s=(s*1664525+1013904223)>>>0;return s/4294967296;}
+  const idx=[...Array(str.length).keys()];
+  for(let i=idx.length-1;i>0;i--){
+    const j=Math.floor(sr()*(i+1));
+    [idx[i],idx[j]]=[idx[j],idx[i]];
+  }
+  return idx; // orden aleatorio de índices
+}
+// pre-calcular órdenes para cada evento
+eventosDef.forEach((e,i)=>{
+  e._letterOrder=makeLetterOrder(e.t.trimEnd(), i*37+7);
+});
 
 let _layout=null;
 let _W=0,_H=0;
@@ -249,14 +267,28 @@ function drawFrame(now){
         drawX=tok.x-(twHover-twNormal)/2;
       }
 
-      if(e.color==='#ffee00'){
-        ctx.fillStyle=`rgba(255,238,0,${op})`;
-      } else if(e.href){
-        ctx.fillStyle=`rgba(0,0,255,${op})`;
-      } else {
-        ctx.fillStyle=`rgba(255,255,255,${op*0.92})`;
+      // dibujar letra a letra en orden aleatorio
+      const word=e.t.trimEnd();
+      const order=e._letterOrder;
+      const lettersToShow=Math.floor((t/REVEAL_MS)*order.length);
+      const visibleSet=new Set(order.slice(0,lettersToShow));
+
+      // medir cada carácter para posicionarlo
+      ctx.font=fontStr;
+      let cx=drawX;
+      for(let li=0;li<word.length;li++){
+        const ch=word[li];
+        const cw=ctx.measureText(ch).width;
+        if(visibleSet.has(li) || t>=REVEAL_MS){
+          const pulsoOp = (!e.href && t>REVEAL_MS)
+            ? (0.82 + 0.18*Math.sin(elapsed*0.00052 + tok.x*0.03 + li*0.3))
+            : 1;
+          if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${pulsoOp})`;
+          else ctx.fillStyle=`rgba(255,255,255,${pulsoOp*0.92})`;
+          ctx.fillText(ch, cx, tok.y);
+        }
+        cx+=cw;
       }
-      ctx.fillText(tok.t, drawX, tok.y);
       ctx.font=`italic ${tFS}px Georgia,serif`;
 
     } else if(tok.isRuido){
@@ -278,19 +310,6 @@ function drawFrame(now){
       ctx.fillText(tok.t,tok.x,tok.y);
     }
 
-    // pulso suave en tokens de evento ya visibles (no links)
-    if(tok.isEvento && !tok.eref.href){
-      const e=tok.eref;
-      const t=elapsed-e.delay;
-      if(t<800) return; // esperar que termine el fade-in
-      // pulso muy lento — un ciclo cada ~12s, fase distinta por token
-      const pulso=0.82 + 0.18*Math.sin(elapsed*0.00052 + tok.x*0.03);
-      // redibujar con opacidad pulsante encima
-      const tFS2=tok.fs||FS;
-      ctx.font=`italic ${tFS2}px Georgia,serif`;
-      ctx.fillStyle=`rgba(255,255,255,${pulso*0.92})`;
-      ctx.fillText(tok.t, tok.x, tok.y);
-    }
   });
 
   requestAnimationFrame(drawFrame);
