@@ -43,7 +43,7 @@ function rnd(){ return ruido[Math.floor(seededRnd()*ruido.length)]; }
 let _ruidoPhases=[];
 
 // Font size adaptado: en mobile más pequeño para que quepan más tokens por fila
-function getFS(){ return window.innerWidth < 500 ? 9 : window.innerWidth < 800 ? 11 : 13; }
+function getFS(){ return window.innerWidth < 500 ? 14 : window.innerWidth < 800 ? 17 : 20; }
 const eventos=[
   {t:'Pánico',                   delay: 500,  pos:.36,  color:BLANCO},
   {t:'o',                        delay: 750,  pos:.36,  color:BLANCO},
