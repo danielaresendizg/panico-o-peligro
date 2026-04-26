@@ -43,7 +43,13 @@ function rnd(){ return ruido[Math.floor(seededRnd()*ruido.length)]; }
 let _ruidoPhases=[];
 
 // Font size adaptado: en mobile más pequeño para que quepan más tokens por fila
-function getFS(){ return window.innerWidth < 500 ? 20 : window.innerWidth < 800 ? 26 : 32; }
+function getFS(){
+  const w=window.innerWidth, h=window.innerHeight;
+  const small=Math.min(w,h); // usa la dimensión menor para detectar mobile real
+  if(small<500) return 11;   // móvil portrait
+  if(small<700) return 16;   // móvil landscape / tablet pequeño
+  return 32;                 // desktop
+}
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
 const eventosDef=[
