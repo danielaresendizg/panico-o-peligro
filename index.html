@@ -76,24 +76,10 @@ function getCanvasW(){ return getBreakpoint().w; }
 function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
-// Intro total: 16s. Los 5 grupos se distribuyen dentro de ese tiempo.
-// Cada letra tiene su propio delay individual (grupo_base + offset_aleatorio)
-// — así las letras de distintos grupos se intercalan con el apagado del ruido.
 const INTRO_MS=16000;
 
-// Semilla para offsets de letras (separada del ruido de fondo)
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
-
-// Ventana de aparición por grupo (dentro del intro)
-// grupo_start..grupo_end: las letras del grupo aparecen en ese intervalo
-const GRUPOS_VENTANA=[
-  {start:1000,  end:4000},   // T0: título
-  {start:4500,  end:8000},   // T1: autora + lugar
-  {start:8500,  end:10500},  // T2: fecha
-  {start:11000, end:13500},  // T3: artistas
-  {start:14000, end:16000},  // T4: links
-];
 
 const eventosDef=[
   // grupo 0: título
@@ -120,19 +106,18 @@ const eventosDef=[
 ];
 const NUM_GRUPOS=5;
 
-// Pre-calcular delay individual por letra (seeded)
-function makeLetterDelays(str, gv){
-  const {start, end}=gv;
-  const span=end-start;
+// Todas las letras de todos los tokens comparten el mismo pool de tiempo.
+// Letras normales: aparecen en 800ms–13000ms (aleatorio)
+// Links: aparecen en 13500ms–16000ms (siempre al final)
+function makeLetterDelays(str, isLink){
+  const start=isLink ? 13500 : 800;
+  const end=isLink   ? 16000 : 13000;
   const delays=[];
-  for(let i=0;i<str.length;i++){
-    delays.push(start + lsr()*span);
-  }
-  return delays; // delay absoluto en ms para cada letra
+  for(let i=0;i<str.length;i++) delays.push(start+lsr()*(end-start));
+  return delays;
 }
 eventosDef.forEach(e=>{
-  const gv=GRUPOS_VENTANA[e.grupo];
-  e._letterDelays=makeLetterDelays(e.t.trimEnd(), gv);
+  e._letterDelays=makeLetterDelays(e.t.trimEnd(), !!e.href);
 });
 
 let _layout=null;
