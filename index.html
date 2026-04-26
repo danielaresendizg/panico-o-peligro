@@ -80,8 +80,16 @@ function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
 const CALM_DURATION=20000;   // arco completo: 20s
-const LETRAS_START=400;      // letras normales empiezan cuando el caos ya subió
-const LETRAS_END=12000;      // última letra aparece en 12s
+// Secuencia narrativa:
+// 0–3s    ruido solo
+// 3–7s    cartografía. se escribe (máquina de escribir)
+// 7–10s   redes. se escribe
+// 10–18s  letras blancas se escriben renglón por renglón
+// 18–20s  inversión: blancas bajan, amarillas suben brillantes
+const LINKS_WRITE_START=3000;
+const LINKS_CHAR_MS=110;     // ms entre cada letra de los links
+const WHITE_WRITE_START=10000;
+const WHITE_CHAR_MS=55;      // ms entre cada letra blanca (más rápido, son más)
 
 let _lseed=999;
 function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
@@ -118,13 +126,28 @@ const eventosDef=[
 ];
 const NUM_GRUPOS=7;
 
-function makeLetterDelays(str){
-  const delays=[];
-  for(let i=0;i<str.length;i++) delays.push(LETRAS_START+lsr()*(LETRAS_END-LETRAS_START));
-  return delays;
-}
+// Delays secuenciales — máquina de escribir
+// Los links se escriben en orden (cartografía primero, redes después)
+// Las blancas se escriben renglón a renglón en orden de aparición
+let _linkCursor=LINKS_WRITE_START;
+let _whiteCursor=WHITE_WRITE_START;
 eventosDef.forEach(e=>{
-  e._letterDelays=makeLetterDelays(e.t.trimEnd());
+  const word=e.t.trimEnd();
+  const delays=[];
+  if(e.href){
+    for(let i=0;i<word.length;i++){
+      delays.push(_linkCursor);
+      _linkCursor+=LINKS_CHAR_MS;
+    }
+    _linkCursor+=600; // pausa entre cartografía y redes
+  } else {
+    for(let i=0;i<word.length;i++){
+      delays.push(_whiteCursor);
+      _whiteCursor+=WHITE_CHAR_MS;
+    }
+    _whiteCursor+=180; // pausa entre palabras
+  }
+  e._letterDelays=delays;
 });
 
 let _layout=null;
@@ -305,9 +328,6 @@ function drawFrame(now){
 
       const drawX=tok.x;
 
-      // tempo global — mismo que el ruido, es el metrónomo de todo
-      const masterT=MASTER_PERIOD*(0.35+calmT*0.65);
-
       // hover: shadowBlur para grosor sin cambiar tamaño
       if(isHover){
         ctx.shadowColor=e.color==='#ffee00'?'rgba(255,238,0,.9)':'rgba(255,255,255,.9)';
@@ -315,29 +335,25 @@ function drawFrame(now){
       }
 
       // ── DIBUJAR LETRAS ───────────────────────────────────────────────
+      // inversión final: empieza en elapsed=18s, termina en 20s
+      const invT=Math.max(0,Math.min(1,(elapsed-18000)/2000));
+
       let cx=drawX;
       for(let li=0;li<word.length;li++){
         const ch=word[li];
         const cw=ctx.measureText(ch).width;
         if(elapsed>=delays[li]){
-          const lphase=delays[li]/MASTER_PERIOD;
-          const langle=((elapsed/masterT)+lphase)*Math.PI*2;
-          const lraw=(Math.sin(langle)*0.5+0.5);
-          const lraw2=(Math.sin(langle*1.618+1.2)*0.5+0.5);
-          const lpulso=lraw*0.75+lraw2*0.25;
+          // fade-in rápido al aparecer (80ms)
+          const appear=Math.min(1,(elapsed-delays[li])/80);
           if(e.href){
-            // AMARILLO: inicia opaco (0.15), termina brillante (0.45..1.0)
-            // calmT^2 abre el rango suavemente
-            const c2=calmT*calmT;
-            const lo=0.15+0.30*c2;  // piso sube de 0.15 → 0.45
-            const hi=0.15+0.85*c2;  // techo sube de 0.15 → 1.0
-            ctx.fillStyle=`rgba(255,238,0,${lo+(hi-lo)*lpulso})`;
+            // AMARILLO: escribe opaco (0.30), inversión final lo sube a 1.0
+            const base=0.30;
+            const op=base+(1-base)*invT;
+            ctx.fillStyle=`rgba(255,238,0,${appear*op})`;
           } else {
-            // BLANCO: inicia brillante (0.92), termina en segundo plano (0.35)
-            // calmT baja el techo suavemente
-            const whitePeak=0.92-0.57*calmT; // 0.92 → 0.35
-            const pulso=lpulso*(1-calmT)+calmT;
-            ctx.fillStyle=`rgba(255,255,255,${pulso*whitePeak})`;
+            // BLANCO: escribe brillante (0.88), inversión final lo baja a 0.38
+            const op=0.88-0.50*invT;
+            ctx.fillStyle=`rgba(255,255,255,${appear*op})`;
           }
           ctx.fillText(ch, cx, tok.y);
         }
@@ -354,9 +370,9 @@ function drawFrame(now){
       const raw2=(Math.sin(angle*1.618+1.2)*0.5+0.5);
       const op=raw*0.75+raw2*0.25;
 
-      // tercer plano: inicia prominente, en calma baja a muy tenue
-      const introEase=calmT<0.5?4*calmT*calmT*calmT:1-Math.pow(-2*calmT+2,3)/2;
-      const ruidoPeak=0.84-0.74*introEase; // 0.84 → 0.10
+      // tercer plano: 0–3s brillante y caótico, luego baja suave a 0.10
+      const ruidoFade=Math.max(0,Math.min(1,(elapsed-2000)/4000));
+      const ruidoPeak=0.84-0.74*ruidoFade; // 0.84 → 0.10
       const finalOp=op*ruidoPeak;
 
       ctx.font=`italic ${tFS}px Georgia,serif`;
