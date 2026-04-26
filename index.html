@@ -7,10 +7,9 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;background:#000008;overflow:hidden}
-/* Canvas fijo 390×844 — centrado, negro alrededor en pantallas más grandes */
+/* Canvas centrado, tamaño fijo por breakpoint — negro alrededor */
 canvas{
   position:fixed;
-  width:390px;height:844px;
   left:50%;top:50%;
   transform:translate(-50%,-50%);
 }
@@ -49,8 +48,28 @@ function rnd(){ return ruido[Math.floor(seededRnd()*ruido.length)]; }
 let _ruidoPhases=[];
 
 // Font size adaptado: en mobile más pequeño para que quepan más tokens por fila
-const CANVAS_W=390, CANVAS_H=844;
-function getFS(){ return 12; }
+const BREAKPOINTS=[
+  {name:'mobile-v',  w:390,  h:844,  fs:11},
+  {name:'mobile-h',  w:844,  h:390,  fs:11},
+  {name:'tablet-v',  w:768,  h:1024, fs:14},
+  {name:'tablet-h',  w:1024, h:768,  fs:14},
+  {name:'laptop',    w:1440, h:900,  fs:20},
+  {name:'desktop',   w:1920, h:1080, fs:24},
+];
+
+function getBreakpoint(){
+  const vw=window.innerWidth, vh=window.innerHeight;
+  // elige el breakpoint cuya relación aspecto y tamaño más se acerca a la ventana
+  return BREAKPOINTS.reduce((best,bp)=>{
+    const dw=Math.abs(bp.w-vw), dh=Math.abs(bp.h-vh);
+    const db=Math.abs(best.w-vw)+Math.abs(best.h-vh);
+    return (dw+dh)<db ? bp : best;
+  });
+}
+
+function getFS(){ return getBreakpoint().fs; }
+function getCanvasW(){ return getBreakpoint().w; }
+function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
 const eventosDef=[
@@ -85,7 +104,7 @@ let _layout=null;
 let _W=0,_H=0;
 
 function buildLayout(){
-  const W=CANVAS_W, H=CANVAS_H;
+  const W=getCanvasW(), H=getCanvasH();
   _W=W; _H=H;
   _seed=42;
   const FS=getFS();
@@ -176,9 +195,12 @@ const startTime=performance.now();
 function drawFrame(now){
   const elapsed=now-startTime;
 
-  if(!_layout){
-    bg.width=CANVAS_W;
-    bg.height=CANVAS_H;
+  const CW=getCanvasW(), CH=getCanvasH();
+  if(!_layout || CW!==_W || CH!==_H){
+    bg.width=CW; bg.height=CH;
+    bg.style.width=CW+'px'; bg.style.height=CH+'px';
+    pc.width=CW; pc.height=CH;
+    pc.style.width=CW+'px'; pc.style.height=CH+'px';
     buildLayout();
   }
 
@@ -261,14 +283,12 @@ bg.addEventListener('touchend',e=>{
   if(hit&&hit.href){e.preventDefault();window.location.href=hit.href;}
 },{passive:false});
 
-bg.width=CANVAS_W; bg.height=CANVAS_H;
-buildLayout();
 requestAnimationFrame(drawFrame);
 
 // Partículas
 const pc=document.getElementById('pc');
 const px=pc.getContext('2d');
-pc.width=CANVAS_W; pc.height=CANVAS_H;
+// canvas se inicializa en drawFrame
 const pts=Array.from({length:35},()=>({
   x:Math.random()*pc.width,y:Math.random()*pc.height,
   s:Math.random()*.5+.1,vx:(Math.random()-.5)*.15,vy:(Math.random()-.5)*.15,
