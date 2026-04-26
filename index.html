@@ -76,8 +76,8 @@ function getCanvasW(){ return getBreakpoint().w; }
 function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
-const RUIDO_BRIGHT_MS=0;     // ruido empieza a apagarse desde el inicio
-const LETRAS_START=1000;     // letras empiezan a la par del ruido
+const RUIDO_BRIGHT_MS=0;
+const LETRAS_START=0;        // letras y ruido arrancan exactamente juntos
 const LETRAS_END=16000;
 const LINKS_START=14000;
 
@@ -109,11 +109,12 @@ const eventosDef=[
   {t:'Brenda.',      grupo:4, color:BLANCO, hoverable:true},
   {t:'Isabel.',      grupo:4, color:BLANCO, hoverable:true},
   {t:'Pérez.',       grupo:4, color:BLANCO, hoverable:true},
-  // grupo 5: links
+  // grupo 5: link cartografía — renglón propio
   {t:'cartografía.', grupo:5, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
-  {t:'redes.',       grupo:5, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
+  // grupo 6: link redes — renglón propio, separado por ruido
+  {t:'redes.',       grupo:6, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
 ];
-const NUM_GRUPOS=6;
+const NUM_GRUPOS=7;
 
 // Cada letra tiene su propio delay aleatorio dentro de la ventana
 // — letras normales empiezan cuando el ruido todavía está alto
