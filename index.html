@@ -78,8 +78,9 @@ function getCanvasW(){ return getBreakpoint().w; }
 function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
-const CALM_DURATION=8000;    // curva de desaceleración total: 8s de rápido→calma
-const LETRAS_END=5000;       // última letra aparece aquí
+const CALM_DURATION=8000;
+const LETRAS_START=200;
+const LETRAS_END=5000;
 const LINKS_START=0;
 const BREATH_START=5500;
 
