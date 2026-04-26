@@ -7,6 +7,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;background:#000008;overflow:hidden}
+#fadeout{position:fixed;inset:0;background:#000008;opacity:0;pointer-events:none;z-index:999;transition:opacity 600ms ease-in}
 /* Canvas centrado, tamaño fijo por breakpoint — negro alrededor */
 canvas{
   position:fixed;
@@ -18,6 +19,7 @@ canvas{
 </style>
 </head>
 <body>
+<div id="fadeout"></div>
 <canvas id="bg"></canvas>
 <canvas id="pc"></canvas>
 <script>
@@ -361,17 +363,22 @@ bg.addEventListener('mousemove',e=>{
   _hoverHref=hit?hit.href:null;
   _hoverTok=hit?hit.eref?_layout.find(t=>t.eref===hit.eref):null:null;
 });
+function navegarCon(href){
+  const fd=document.getElementById('fadeout');
+  fd.style.opacity='1';
+  setTimeout(()=>{ window.location.href=href; }, 620);
+}
+
 bg.addEventListener('click',e=>{
   const b=bg.getBoundingClientRect();
   const hit=hitTest(e.clientX-b.left,e.clientY-b.top);
-  if(hit&&hit.href) window.location.href=hit.href;
+  if(hit&&hit.href) navegarCon(hit.href);
 });
-// touch: tap en links
 bg.addEventListener('touchend',e=>{
   const b=bg.getBoundingClientRect();
   const t=e.changedTouches[0];
   const hit=hitTest(t.clientX-b.left,t.clientY-b.top);
-  if(hit&&hit.href){e.preventDefault();window.location.href=hit.href;}
+  if(hit&&hit.href){e.preventDefault();navegarCon(hit.href);}
 },{passive:false});
 
 requestAnimationFrame(drawFrame);
