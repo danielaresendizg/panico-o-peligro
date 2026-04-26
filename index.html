@@ -76,50 +76,63 @@ function getCanvasW(){ return getBreakpoint().w; }
 function getCanvasH(){ return getBreakpoint().h; }
 // Grupos de datos — pos se calcula dinámicamente en buildLayout()
 // group: id del grupo (0-7), mismo grupo = misma hilera garantizada
-// 5 tiempos de aparición — cada grupo recibe un delay base
-// Las letras de cada palabra aparecen aleatoriamente en 800ms
-const T=[4500, 7000, 9500, 12000, 15000]; // 5 momentos
-const eventosDef=[
-  // T0: título
-  {t:'Pánico.',    delay:T[0],   grupo:0, color:BLANCO},
-  {t:'Peligro.',   delay:T[0],   grupo:0, color:BLANCO},
-  // T1: autora + lugar
-  {t:'María.',     delay:T[1],   grupo:1, color:BLANCO},
-  {t:'Luisa.',     delay:T[1],   grupo:1, color:BLANCO},
-  {t:'Puga.',      delay:T[1],   grupo:1, color:BLANCO},
-  {t:'Centro.',    delay:T[1],   grupo:2, color:BLANCO},
-  {t:'Cultural.',  delay:T[1],   grupo:2, color:BLANCO},
-  {t:'España.',    delay:T[1],   grupo:2, color:BLANCO},
-  // T2: fecha
-  {t:'25.06.2026.',delay:T[2],   grupo:3, color:BLANCO},
-  // T3: artistas
-  {t:'Daniela.',   delay:T[3],   grupo:4, color:BLANCO, hoverable:true},
-  {t:'Reséndiz.',  delay:T[3],   grupo:4, color:BLANCO, hoverable:true},
-  {t:'Brenda.',    delay:T[3],   grupo:5, color:BLANCO, hoverable:true},
-  {t:'Isabel.',    delay:T[3],   grupo:5, color:BLANCO, hoverable:true},
-  {t:'Pérez.',     delay:T[3],   grupo:5, color:BLANCO, hoverable:true},
-  // T4: links
-  {t:'cartografía.',delay:T[4],  grupo:6, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
-  {t:'redes.',      delay:T[4],  grupo:7, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
-];
-const NUM_GRUPOS=8;
+// Intro total: 16s. Los 5 grupos se distribuyen dentro de ese tiempo.
+// Cada letra tiene su propio delay individual (grupo_base + offset_aleatorio)
+// — así las letras de distintos grupos se intercalan con el apagado del ruido.
+const INTRO_MS=16000;
 
-// Permutación de letras por token (seeded) para revelar aleatoriamente
-// letterReveal[i] = array de índices en orden de aparición
-const REVEAL_MS=900; // ms para revelar todas las letras de un token
-function makeLetterOrder(str, seed){
-  let s=seed;
-  function sr(){s=(s*1664525+1013904223)>>>0;return s/4294967296;}
-  const idx=[...Array(str.length).keys()];
-  for(let i=idx.length-1;i>0;i--){
-    const j=Math.floor(sr()*(i+1));
-    [idx[i],idx[j]]=[idx[j],idx[i]];
+// Semilla para offsets de letras (separada del ruido de fondo)
+let _lseed=999;
+function lsr(){_lseed=(_lseed*1664525+1013904223)>>>0;return _lseed/4294967296;}
+
+// Ventana de aparición por grupo (dentro del intro)
+// grupo_start..grupo_end: las letras del grupo aparecen en ese intervalo
+const GRUPOS_VENTANA=[
+  {start:1000,  end:4000},   // T0: título
+  {start:4500,  end:8000},   // T1: autora + lugar
+  {start:8500,  end:10500},  // T2: fecha
+  {start:11000, end:13500},  // T3: artistas
+  {start:14000, end:16000},  // T4: links
+];
+
+const eventosDef=[
+  // grupo 0: título
+  {t:'Pánico.',    grupo:0, color:BLANCO},
+  {t:'Peligro.',   grupo:0, color:BLANCO},
+  // grupo 1: autora + lugar (misma ventana, intercalados)
+  {t:'María.',     grupo:1, color:BLANCO},
+  {t:'Luisa.',     grupo:1, color:BLANCO},
+  {t:'Puga.',      grupo:1, color:BLANCO},
+  {t:'Centro.',    grupo:1, color:BLANCO},
+  {t:'Cultural.',  grupo:1, color:BLANCO},
+  {t:'España.',    grupo:1, color:BLANCO},
+  // grupo 2: fecha
+  {t:'25.06.2026.',grupo:2, color:BLANCO},
+  // grupo 3: artistas
+  {t:'Daniela.',   grupo:3, color:BLANCO, hoverable:true},
+  {t:'Reséndiz.',  grupo:3, color:BLANCO, hoverable:true},
+  {t:'Brenda.',    grupo:3, color:BLANCO, hoverable:true},
+  {t:'Isabel.',    grupo:3, color:BLANCO, hoverable:true},
+  {t:'Pérez.',     grupo:3, color:BLANCO, hoverable:true},
+  // grupo 4: links
+  {t:'cartografía.',grupo:4, color:'#ffee00', href:'cartografia.html', hoverable:true, mono:true},
+  {t:'redes.',      grupo:4, color:'#ffee00', href:'grafos.html', hoverable:true, mono:true},
+];
+const NUM_GRUPOS=5;
+
+// Pre-calcular delay individual por letra (seeded)
+function makeLetterDelays(str, gv){
+  const {start, end}=gv;
+  const span=end-start;
+  const delays=[];
+  for(let i=0;i<str.length;i++){
+    delays.push(start + lsr()*span);
   }
-  return idx; // orden aleatorio de índices
+  return delays; // delay absoluto en ms para cada letra
 }
-// pre-calcular órdenes para cada evento
-eventosDef.forEach((e,i)=>{
-  e._letterOrder=makeLetterOrder(e.t.trimEnd(), i*37+7);
+eventosDef.forEach(e=>{
+  const gv=GRUPOS_VENTANA[e.grupo];
+  e._letterDelays=makeLetterDelays(e.t.trimEnd(), gv);
 });
 
 let _layout=null;
@@ -242,16 +255,14 @@ function drawFrame(now){
 
     if(tok.isEvento){
       const e=tok.eref;
-      const t=elapsed-e.delay;
-      if(t<0) return;
-      const op=Math.min(1,t/500);
+      const word=e.t.trimEnd();
+      const delays=e._letterDelays;
 
-      if(op>0.1 && e.hoverable) window._clickables.push({
-        x1:tok.x, y1:tok.y-tFS*1.5, x2:tok.x+tok.tw+20, y2:tok.y+6,
-        href:e.href||null, eref:e
-      });
+      // ¿hay alguna letra visible ya?
+      const anyVisible=delays.some(d=>elapsed>=d);
+      if(!anyVisible) return;
 
-      // hover solo en links (cartografía y redes)
+      // hover solo en links
       const isHover=e.href && _hoverTok===tok;
       const fs=isHover ? tFS*1.5 : tFS;
       const fontStr=e.mono
@@ -259,32 +270,33 @@ function drawFrame(now){
         : `italic ${fs}px Georgia,serif`;
       ctx.font=fontStr;
 
-      // centrar el hover: desplazar x para que el centro del token no se mueva
+      // bbox para clicks
+      if(e.hoverable) window._clickables.push({
+        x1:tok.x, y1:tok.y-tFS*1.5, x2:tok.x+tok.tw+20, y2:tok.y+6,
+        href:e.href||null, eref:e
+      });
+
+      // centrar hover
       let drawX=tok.x;
       if(isHover){
-        const twNormal=tok.tw;
-        const twHover=ctx.measureText(tok.t).width;
-        drawX=tok.x-(twHover-twNormal)/2;
+        const twHover=ctx.measureText(word).width;
+        drawX=tok.x-(twHover-tok.tw)/2;
       }
 
-      // dibujar letra a letra en orden aleatorio
-      const word=e.t.trimEnd();
-      const order=e._letterOrder;
-      const lettersToShow=Math.floor((t/REVEAL_MS)*order.length);
-      const visibleSet=new Set(order.slice(0,lettersToShow));
-
-      // medir cada carácter para posicionarlo
-      ctx.font=fontStr;
+      // dibujar letra a letra según su delay individual
       let cx=drawX;
       for(let li=0;li<word.length;li++){
         const ch=word[li];
         const cw=ctx.measureText(ch).width;
-        if(visibleSet.has(li) || t>=REVEAL_MS){
-          const pulsoOp = (!e.href && t>REVEAL_MS)
-            ? (0.82 + 0.18*Math.sin(elapsed*0.00052 + tok.x*0.03 + li*0.3))
+        if(elapsed>=delays[li]){
+          // fade-in por letra: 400ms
+          const lop=Math.min(1,(elapsed-delays[li])/400);
+          // pulso suave post-aparición (no en links)
+          const pulso=(!e.href)
+            ? (0.82 + 0.18*Math.sin(elapsed*0.00052 + tok.x*0.03 + li*0.4))
             : 1;
-          if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${pulsoOp})`;
-          else ctx.fillStyle=`rgba(255,255,255,${pulsoOp*0.92})`;
+          if(e.color==='#ffee00') ctx.fillStyle=`rgba(255,238,0,${lop*pulso})`;
+          else ctx.fillStyle=`rgba(255,255,255,${lop*pulso*0.92})`;
           ctx.fillText(ch, cx, tok.y);
         }
         cx+=cw;
@@ -299,9 +311,8 @@ function drawFrame(now){
       else if(cycle<0.6) op=1;
       else op=(1-cycle)/0.4;
 
-      // intro: ruido empieza muy visible y se apaga en 8s — respiración lenta
-      const introT=Math.max(0, Math.min(1, elapsed/8000));
-      // curva suave: ease-in-out cúbico
+      // intro: ruido se apaga al mismo ritmo que aparecen los datos
+      const introT=Math.max(0, Math.min(1, elapsed/INTRO_MS));
       const introEase=introT<0.5 ? 4*introT*introT*introT : 1-Math.pow(-2*introT+2,3)/2;
       const finalOp=op*(0.16 + (1-introEase)*0.84);
 
