@@ -268,7 +268,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-f
 }
 #stats b{color:var(--electro)}
 
-/* ── ROTATE NOTICE (portrait mobile) ── */
+/* ── ROTATE NOTICE (portrait solo en mobile) ── */
 #rotate-notice{
   display:none;position:fixed;inset:0;z-index:300;background:#000008;
   align-items:center;justify-content:center;flex-direction:column;gap:16px;
@@ -278,26 +278,30 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-f
   color:rgba(255,255,255,.7);text-align:center;padding:0 32px;line-height:1.8;
 }
 
-/* ── TOGGLE MOBILE ── */
+/* ── TOGGLE PANEL ── */
 #panel-toggle{
-  display:none;position:fixed;top:14px;left:14px;
+  display:none;position:fixed;top:12px;left:12px;
   z-index:30;background:rgba(0,0,5,.92);border:1px solid rgba(255,255,255,.2);
-  color:#fff;font-style:italic;font-family:Georgia,serif;font-size:.75rem;
-  padding:6px 16px;border-radius:14px;cursor:pointer;backdrop-filter:blur(8px);
-  transition:all 200ms;
+  color:#fff;font-style:italic;font-family:Georgia,serif;font-size:.72rem;
+  padding:5px 14px;border-radius:12px;cursor:pointer;backdrop-filter:blur(8px);
+  transition:all 200ms;white-space:nowrap;
 }
 #panel-toggle:hover{background:rgba(255,255,255,.08)}
 
-@media(orientation:portrait){
+/* Portrait en mobile: pide rotar */
+@media(max-width:900px) and (orientation:portrait){
   #rotate-notice{display:flex}
 }
-@media(orientation:landscape) and (max-height:700px){
-  #panel{width:300px}
-  #cita-f{left:316px}
+/* Landscape en mobile/tablet: panel más estrecho, toggle visible */
+@media(max-width:1024px) and (orientation:landscape){
+  #panel{width:280px;transition:transform 300ms ease}
+  #cita-f{left:294px;transition:left 300ms ease}
   #panel-toggle{display:block}
-  #panel.cerrado{transform:translateX(-100%);transition:transform 300ms ease}
-  #panel.cerrado~* #cita-f{left:14px}
 }
+/* Panel cerrado */
+#panel.cerrado{transform:translateX(-100%)}
+#panel.cerrado~#cita-f-wrap,
+.panel-cerrado #cita-f{left:14px!important}
 
 /* ── CARGA ── */
 #carga{
@@ -555,7 +559,7 @@ const DARK_STYLE={
   ]
 };
 
-const map=new maplibregl.Map({
+window.map=new maplibregl.Map({
   container:'map',style:DARK_STYLE,
   center:[-99.163,19.415],zoom:13.5,maxZoom:18,minZoom:2,
 });
@@ -1393,12 +1397,17 @@ function parsearCitas(raw){if(!raw)return[];if(Array.isArray(raw))return raw;try
   };
 })();
 
-// ── MOBILE PANEL TOGGLE ──────────────────────────────────────────────────────
+// ── PANEL TOGGLE ─────────────────────────────────────────────────────────────
 let _panelAbierto=true;
 function togglePanel(){
   _panelAbierto=!_panelAbierto;
   document.getElementById('panel').classList.toggle('cerrado',!_panelAbierto);
-  document.getElementById('panel-toggle').textContent=_panelAbierto?'✕ Cerrar':'☰ Info';
+  document.getElementById('panel-toggle').textContent=_panelAbierto?'✕':'☰';
+  // ajustar cita-f
+  const cf=document.getElementById('cita-f');
+  if(cf) cf.style.left=_panelAbierto?'294px':'14px';
+  // forzar resize del mapa
+  setTimeout(()=>{ if(window.map) window.map.resize(); },320);
 }
 </script>
 </body>

@@ -10,43 +10,11 @@ html,body{width:100%;height:100%;background:#000008;overflow:hidden}
 canvas{position:fixed;inset:0;width:100%;height:100%}
 #pc{z-index:1;pointer-events:none}
 #bg{z-index:0}
-
-/* En mobile el texto del evento se muestra como overlay HTML centrado */
-#mobile-info{
-  display:none;
-  position:fixed;inset:0;z-index:2;
-  align-items:center;justify-content:center;
-  pointer-events:none;
-}
-#mobile-info-inner{
-  font-family:Georgia,serif;font-style:italic;
-  text-align:center;line-height:2;pointer-events:auto;
-}
-#mobile-info-inner .ev{font-size:1rem;color:rgba(255,255,255,.92);}
-#mobile-info-inner .ev-link{font-size:1rem;color:#0000ff;cursor:pointer;display:inline-block;margin:0 .5em;}
-#mobile-info-inner .ev-link:active{opacity:.6}
-@media(max-width:700px),(max-height:500px) and (orientation:portrait){
-  #mobile-info{display:flex}
-}
 </style>
 </head>
 <body>
 <canvas id="bg"></canvas>
 <canvas id="pc"></canvas>
-
-<div id="mobile-info">
-  <div id="mobile-info-inner">
-    <div class="ev">Pánico o Peligro.</div>
-    <div class="ev">María Luisa Puga.</div>
-    <div class="ev">Centro Cultural España.</div>
-    <div class="ev">25 de junio, 2026.</div>
-    <div class="ev">Daniela Reséndiz &amp; Brenda Isabel Pérez.</div>
-    <div style="margin-top:.8em">
-      <span class="ev-link" onclick="location.href='cartografia.html'">Cartografía.</span>
-      <span class="ev-link" onclick="location.href='grafos.html'">Redes.</span>
-    </div>
-  </div>
-</div>
 <script>
 const bg=document.getElementById('bg');
 const ctx=bg.getContext('2d');
@@ -74,7 +42,8 @@ function rnd(){ return ruido[Math.floor(seededRnd()*ruido.length)]; }
 // Se asigna al construir el layout
 let _ruidoPhases=[];
 
-const FS=13;
+// Font size adaptado: en mobile más pequeño para que quepan más tokens por fila
+function getFS(){ return window.innerWidth < 500 ? 9 : window.innerWidth < 800 ? 11 : 13; }
 const eventos=[
   {t:'Pánico',                   delay: 500,  pos:.36,  color:BLANCO},
   {t:'o',                        delay: 750,  pos:.36,  color:BLANCO},
@@ -101,6 +70,7 @@ function buildLayout(){
   const W=window.innerWidth, H=window.innerHeight;
   _W=W; _H=H;
   _seed=42;
+  const FS=getFS();
 
   const lh=Math.round(FS*1.52);
   ctx.font=`italic ${FS}px Georgia,serif`;
@@ -117,14 +87,14 @@ function buildLayout(){
   let ei=0;
   let r=0, x=0;
 
-  function rowX(row){ return -(row*71)%140; }
+  function rowX(row){ return -(row*71)%Math.min(140,W*0.2); }
   x=rowX(0);
 
   function pushTok(tok){
     const tw=ctx.measureText(tok.t+'  ').width;
     if(x+tw>W+20){ r++; x=rowX(r); }
     const y=r*lh+FS;
-    tok.x=x; tok.y=y; tok.tw=tw;
+    tok.x=x; tok.y=y; tok.tw=tw; tok.fs=FS;
     layout.push(tok);
     x+=tw;
   }
@@ -139,7 +109,6 @@ function buildLayout(){
     const burst=Math.floor(seededRnd()*3)+1;
     for(let b=0;b<burst;b++){
       const tok={t:rnd()+'.  ', isRuido:true, phaseIdx:_ruidoPhases.length};
-      // fase aleatoria para el ciclo de vida (0–1), periodo entre 3 y 8 s
       _ruidoPhases.push({phase:seededRnd(), period:3000+seededRnd()*5000});
       pushTok(tok);
     }
@@ -172,12 +141,14 @@ function drawFrame(now){
     buildLayout();
   }
 
+  const FS=getFS();
   ctx.clearRect(0,0,_W,_H);
   ctx.shadowBlur=0;
   window._clickables=[];
 
   _layout.forEach(tok=>{
     if(tok.y>_H+20) return;
+    const tFS=tok.fs||FS;
 
     if(tok.isEvento){
       const e=tok.eref;
@@ -185,35 +156,28 @@ function drawFrame(now){
       if(t<0) return;
       const op=Math.min(1,t/500);
 
-      // registrar bbox para hover solo en hoverable
       if(op>0.1 && e.hoverable) window._clickables.push({
-        x1:tok.x, y1:tok.y-FS*1.5, x2:tok.x+tok.tw+20, y2:tok.y+6,
+        x1:tok.x, y1:tok.y-tFS*1.5, x2:tok.x+tok.tw+20, y2:tok.y+6,
         href:e.href||null, eref:e
       });
 
       const isHover=e.hoverable && _hoverTok===tok;
-      const fs=isHover ? FS*2.8 : FS;
-      const yOff=isHover ? FS*0.8 : 0;
+      const fs=isHover ? tFS*2.8 : tFS;
+      const yOff=isHover ? tFS*0.8 : 0;
       ctx.font=`italic ${fs}px Georgia,serif`;
 
-      if(e.href){
-        ctx.fillStyle=`rgba(0,0,255,${op})`;
-      } else {
-        ctx.fillStyle=`rgba(255,255,255,${op*0.92})`;
-      }
+      ctx.fillStyle=e.href ? `rgba(0,0,255,${op})` : `rgba(255,255,255,${op*0.92})`;
       ctx.fillText(tok.t, tok.x, tok.y+yOff);
-      ctx.font=`italic ${FS}px Georgia,serif`;
+      ctx.font=`italic ${tFS}px Georgia,serif`;
 
     } else if(tok.isRuido){
-      // ciclo suave de aparición/desaparición
       const ph=_ruidoPhases[tok.phaseIdx];
       const cycle=(elapsed/ph.period + ph.phase) % 1;
-      // op: sube 0→1 en primer 40%, baja 1→0 en último 40%, plateau en medio
       let op;
       if(cycle<0.4) op=cycle/0.4;
       else if(cycle<0.6) op=1;
       else op=(1-cycle)/0.4;
-      ctx.font=`italic ${FS}px Georgia,serif`;
+      ctx.font=`italic ${tFS}px Georgia,serif`;
       ctx.fillStyle=`rgba(255,255,255,${op*0.16})`;
       ctx.fillText(tok.t,tok.x,tok.y);
     }
