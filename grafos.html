@@ -132,6 +132,37 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-f
   background:none;transition:all 220ms;letter-spacing:.03em;
 }
 #intro-r-entrar:hover{color:#fff;border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.05)}
+
+/* ── TOGGLE MOBILE ── */
+#panel-toggle{
+  display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  z-index:30;background:rgba(0,0,5,.92);border:1px solid rgba(255,255,255,.2);
+  color:#fff;font-style:italic;font-family:Georgia,serif;font-size:.85rem;
+  padding:9px 24px;border-radius:20px;cursor:pointer;backdrop-filter:blur(8px);
+  transition:all 200ms;
+}
+#panel-toggle:hover{background:rgba(255,255,255,.08)}
+
+@media(max-width:700px){
+  #panel{
+    width:100%!important;height:60vh;
+    top:auto;bottom:0;left:0;right:0;
+    border-right:none;border-top:1px solid rgba(255,255,255,.1);
+    border-radius:16px 16px 0 0;
+    transform:translateY(100%);transition:transform 350ms ease;
+  }
+  #panel.abierto{transform:translateY(0)}
+  #canvas{left:0!important;bottom:60vh}
+  #titulo{left:12px;top:8px;font-size:.6rem}
+  #volver{bottom:calc(60vh + 10px);right:10px}
+  #panel-toggle{display:block}
+  #tt{max-width:calc(100vw - 20px)}
+}
+@media(max-width:700px) and (orientation:landscape){
+  #panel{width:55%!important;height:100%;top:0;bottom:0;border-radius:0;transform:translateX(-100%)}
+  #panel.abierto{transform:translateX(0)}
+  #canvas{left:0!important;bottom:0}
+}
 </style>
 </head>
 <body>
@@ -227,6 +258,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--blanco);font-f
 <div id="titulo"></div>
 <div id="tt"></div>
 <div id="volver" onclick="window.close()">← Volver al mapa</div>
+<button id="panel-toggle" onclick="togglePanelR()">Info</button>
 
 <script>
 // ── PARTÍCULAS ───────────────────────────────────────────────────────────────
@@ -1063,6 +1095,14 @@ cargar();
     setTimeout(()=>intro.style.display='none',650);
   };
 })();
+
+// ── MOBILE PANEL TOGGLE ──────────────────────────────────────────────────────
+let _panelRAbierto=false;
+function togglePanelR(){
+  _panelRAbierto=!_panelRAbierto;
+  document.getElementById('panel').classList.toggle('abierto',_panelRAbierto);
+  document.getElementById('panel-toggle').textContent=_panelRAbierto?'Cerrar':'Info';
+}
 </script>
 </body>
 </html>

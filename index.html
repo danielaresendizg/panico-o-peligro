@@ -190,21 +190,28 @@ function drawFrame(now){
   requestAnimationFrame(drawFrame);
 }
 
+function hitTest(mx,my){
+  return (window._clickables||[]).find(c=>mx>=c.x1&&mx<=c.x2&&my>=c.y1&&my<=c.y2);
+}
 bg.addEventListener('mousemove',e=>{
   const b=bg.getBoundingClientRect();
-  const mx=e.clientX-b.left, my=e.clientY-b.top;
-  const hit=(window._clickables||[]).find(c=>mx>=c.x1&&mx<=c.x2&&my>=c.y1&&my<=c.y2);
+  const hit=hitTest(e.clientX-b.left,e.clientY-b.top);
   bg.style.cursor=(hit&&hit.href)?'pointer':'default';
   _hoverHref=hit?hit.href:null;
   _hoverTok=hit?hit.eref?_layout.find(t=>t.eref===hit.eref):null:null;
 });
 bg.addEventListener('click',e=>{
   const b=bg.getBoundingClientRect();
-  const mx=e.clientX-b.left, my=e.clientY-b.top;
-  (window._clickables||[]).forEach(c=>{
-    if(mx>=c.x1&&mx<=c.x2&&my>=c.y1&&my<=c.y2) window.location.href=c.href;
-  });
+  const hit=hitTest(e.clientX-b.left,e.clientY-b.top);
+  if(hit&&hit.href) window.location.href=hit.href;
 });
+// touch: tap en links
+bg.addEventListener('touchend',e=>{
+  const b=bg.getBoundingClientRect();
+  const t=e.changedTouches[0];
+  const hit=hitTest(t.clientX-b.left,t.clientY-b.top);
+  if(hit&&hit.href){e.preventDefault();window.location.href=hit.href;}
+},{passive:false});
 
 buildLayout();
 bg.width=_W; bg.height=_H;
