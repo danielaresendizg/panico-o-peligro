@@ -343,12 +343,11 @@ function drawFrame(now){
         const ch=word[li];
         const cw=ctx.measureText(ch).width;
         if(elapsed>=delays[li]){
-          const lphase=delays[li]/MASTER_PERIOD; // fase única por letra, derivada del delay
-          const lcycle=((elapsed/masterT)+lphase)%1;
-          let lpulso;
-          if(lcycle<0.4) lpulso=lcycle/0.4;
-          else if(lcycle<0.6) lpulso=1;
-          else lpulso=(1-lcycle)/0.4;
+          const lphase=delays[li]/MASTER_PERIOD;
+          const langle=((elapsed/masterT)+lphase)*Math.PI*2;
+          const lraw=(Math.sin(langle)*0.5+0.5);
+          const lraw2=(Math.sin(langle*1.618+1.2)*0.5+0.5);
+          const lpulso=lraw*0.75+lraw2*0.25;
           // en calma el pulso se aplana a 1 — letras se estabilizan
           const pulso=lpulso*(1-calmT)+calmT;
           const finalOp=e.href ? breathOp : pulso*0.92;
@@ -365,11 +364,10 @@ function drawFrame(now){
     } else if(tok.isRuido){
       const ph=_ruidoPhases[tok.phaseIdx];
       const masterT=MASTER_PERIOD*(0.35+calmT*0.65);
-      const cycle=(elapsed/masterT+ph.phase)%1;
-      let op;
-      if(cycle<0.4) op=cycle/0.4;
-      else if(cycle<0.6) op=1;
-      else op=(1-cycle)/0.4;
+      const angle=((elapsed/masterT)+ph.phase)*Math.PI*2;
+      const raw=(Math.sin(angle)*0.5+0.5);
+      const raw2=(Math.sin(angle*1.618+1.2)*0.5+0.5);
+      const op=raw*0.75+raw2*0.25;
 
       const introEase=calmT<0.5?4*calmT*calmT*calmT:1-Math.pow(-2*calmT+2,3)/2;
       const finalOp=op*(0.10+(1-introEase)*0.74);
